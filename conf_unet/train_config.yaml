@@ -1,0 +1,33 @@
+bnn:
+  name: "storesnet18"
+  ck_dir: "./checkpoints/storesnet18"
+  epoch: 200 
+  n_components: 2
+
+unet:
+  ck_dir: "./checkpoints/unet"
+
+experiment:
+  name: "train unet for noise generation"
+  seed: 42
+  log_dir: ".../logs/train"
+
+params:
+  n_epochs: 100
+  batch_size: 128
+  lr: 1e-2
+  anta: 1
+  weight_decay: 5e-4
+
+dataset:
+<<<<<<< HEAD
+  name: CIFAR10
+  dir: ./data/CIFAR10
+  in_channels: 3
+=======
+  name: FashionMNIST
+  dir: ./data/FashionMNIST
+  in_channels: 1
+>>>>>>> origin/main
+  n_classes: 10
+  download: False

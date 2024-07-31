@@ -1,0 +1,44 @@
+model:
+  name: "storesnet18"
+  ck_dir: "./checkpoints/storesnet18" 
+  stochastic: 1
+  n_component: 2
+
+experiment:
+  name: "train storesnet18"
+  seed: 42
+  log_dir: ".../runs/train"
+
+params:
+  n_epoch: 200
+  batch_size: 128
+<<<<<<< HEAD
+  lr: 0.01
+=======
+  lr: 0.1
+>>>>>>> origin/main
+  geo_aug: True
+  milestones: [0.5, 0.9]
+  final_factor: 0.3
+  weight_decay: 0.0
+  entropy_weight: 1.0
+  n_sample: 1
+  kl_min: 0.05
+  kl_max: 1
+  prior_mean: 1.0
+  prior_std: 0.40
+  post_mean_init: [1.0, 0.02]
+  post_std_init: [0.40, 0.05]
+
+dataset:
+<<<<<<< HEAD
+  name: CIFAR10
+  dir: ./data/CIFAR10
+  in_channel: 3
+=======
+  name_clean: FashionMNIST
+  dir_clean: ./data/FashionMNIST
+  in_channel: 1
+>>>>>>> origin/main
+  n_classes: 10
+  download: False

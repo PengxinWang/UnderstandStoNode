@@ -1,0 +1,22 @@
+model:
+  name: "resnet18"
+  ck_dir: "./checkpoints/resnet18" 
+
+experiment:
+  name: "train resnet18 with data augmentation"
+  seed: 42
+  log_dir: ".../logs/train"
+
+params:
+  n_epoch: 200
+  batch_size: 128
+  lr: 1e-3
+  geo_aug: True
+  weight_decay: 1e-3
+
+dataset:
+  name_clean: FashionMNIST
+  dir_clean: ./data/FashionMNIST
+  in_channel: 1
+  n_classes: 10
+  download: False

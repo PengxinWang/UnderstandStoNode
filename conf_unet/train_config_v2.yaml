@@ -1,0 +1,60 @@
+bnn:
+  name: "storesnet18"
+  ck_dir: "./checkpoints/storesnet18"
+  epoch: 200 
+  n_components: 2
+
+unet:
+  ck_dir: "./checkpoints/unet_v2"
+
+experiment:
+<<<<<<< HEAD
+  name: "train unet v2(perceptual loss) for noise generation"
+  seed: 42
+  log_dir: ".../logs"
+
+perceptual:
+  ck_dir: "./checkpoints/resnet18"
+  epoch: 100
+  input_weight_initial: 1.
+  input_weight_final: 0.3
+  intermediate_weight: 0.025
+  prediction_weight: 0.6
+  perceptual_layers: [2, 4, 6, 8]
+
+params:
+  n_epochs: 200
+=======
+  name: "train unet v2 for noise generation"
+  seed: 42
+  log_dir: ".../logs/train"
+
+perceptual:
+  ck_dir: "./checkpoints/resnet18"
+  epoch: 200
+  input_weight_initial: 1.
+  input_weight_final: 0.1
+  intermediate_weight: 0.025
+  prediction_weight: 1
+  perceptual_layers: [2, 4, 6, 8]
+
+params:
+  n_epochs: 20
+>>>>>>> origin/main
+  batch_size: 128
+  lr: 1e-2
+  anta: 0.5
+  weight_decay: 5e-4  
+
+dataset:
+<<<<<<< HEAD
+  name: CIFAR10
+  dir: ./data/CIFAR10
+  in_channels: 3
+=======
+  name: FashionMNIST
+  dir: ./data/FashionMNIST
+  in_channels: 1
+>>>>>>> origin/main
+  n_classes: 10
+  download: False
