@@ -36,11 +36,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, input_dir, log_dir, download, n_classes
                                  train=True, val=True,
                                  download=download,
                                  batch_size=batch_size,
-<<<<<<< HEAD
                                  train_unet_ratio=0.3)
-=======
-                                 train_unet=0.3)
->>>>>>> origin/main
     
     bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=1).to(device)
     det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=2).to(device)
@@ -69,11 +65,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, input_dir, log_dir, download, n_classes
                 bnn_pred = bnn_model(imgs).mean(dim=1).exp()
                 det_pred = det_model(noisy_imgs).mean(dim=1).exp()
                 ce_loss, l2_loss = consistency_loss(bnn_pred, det_pred, epsilon=epsilon ,anta=anta)
-<<<<<<< HEAD
                 loss = 0*ce_loss + l2_loss
-=======
-                loss = ce_loss + l2_loss
->>>>>>> origin/main
                 epoch_loss += loss.item()
                 epoch_ce_loss += ce_loss.item()
 
@@ -94,11 +86,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, input_dir, log_dir, download, n_classes
                 det_pred = det_model(noisy_imgs).mean(dim=1).exp()
 
                 ce_loss_val, l2_loss_val = consistency_loss(bnn_pred, det_pred, epsilon=epsilon, anta=anta)
-<<<<<<< HEAD
                 loss_val = 0*ce_loss_val + l2_loss_val
-=======
-                loss_val = ce_loss_val + l2_loss_val
->>>>>>> origin/main
                 epoch_loss_val += loss_val.item()
                 epoch_ce_loss_val += ce_loss_val.item()
 

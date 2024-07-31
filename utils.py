@@ -4,7 +4,6 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset
 
-<<<<<<< HEAD
 # Data
 def unnormalize(tensor):
     """ Unnormalize from [0, 1] to [0, 255] """
@@ -47,22 +46,12 @@ class CorruptDataset(torch.utils.data.Dataset):
         self.labels = np.concatenate(
             [np.load(os.path.join(data_dir, 'labels.npy'))[(intensity-1)*10000:intensity*10000]] * len(corrupt_types), axis=0
         )
-=======
-class Customized_Dataset(Dataset):
-    """
-    create customized dataset in pytorch
-    """
-    def __init__(self, imgs, labels, transform=None):
-        self.imgs = imgs
-        self.labels = labels
->>>>>>> origin/main
         self.transform = transform
 
     def __len__(self):
         return len(self.imgs)
 
     def __getitem__(self, idx):
-<<<<<<< HEAD
         img = self.imgs[idx]
         label = torch.tensor(self.labels[idx]).long()
         if self.transform:
@@ -70,41 +59,6 @@ class Customized_Dataset(Dataset):
         return img, label
 
 # Training
-=======
-        x = self.imgs[idx].squeeze()
-        if self.transform:
-            x = self.transform(x)
-        y = self.labels[idx]
-        return x, y
-    
-class ECE(nn.Module):
-    """
-    expected calibration error, measure how reliable confidence score is.
-    """
-    def __init__(self, n_bins=15):
-        super().__init__()
-        bins = torch.linspace(0, 1, n_bins+1)
-        self.bin_lowers = bins[:-1]
-        self.bin_uppers = bins[1:]
-    
-    def forward(self, preds, labels):
-        # preds.shape = [len(testset), n_classes], labels.shape[len(testset)], 
-        # note: preds need to be normalized
-        confidences, preds = torch.max(preds, dim=1)
-        correct_preds = preds.eq(labels)
-
-        ece = 0.
-        for bin_lower, bin_upper in zip(self.bin_lowers, self.bin_uppers):
-            sample_in_bin = confidences.gt(bin_lower.item())*confidences.le(bin_upper.item())
-            prop_in_bin = sample_in_bin.float().mean()
-            if  prop_in_bin.item() > 0:
-                acc_in_bin = correct_preds[sample_in_bin].float().mean()
-                avg_confidence_in_bin = confidences[sample_in_bin].mean()
-                diff_in_bin = torch.abs(avg_confidence_in_bin - acc_in_bin) * prop_in_bin
-                ece += diff_in_bin.item()
-        return ece
-
->>>>>>> origin/main
 def anneal_weight(epoch, initial_weight=1e-2, final_weight=1e-1, last_epoch=200, mode='linear'):
     """
     Change weight for certain loss in different epoch.
@@ -156,7 +110,6 @@ def cross_entropy(input, target):
     input = torch.clamp(input=input, min=1e-32)
     res = -torch.sum(target * torch.log(input), dim=-1)
     return torch.mean(res)
-<<<<<<< HEAD
     
 # Evaluation
 class ECE(nn.Module):
@@ -186,31 +139,6 @@ class ECE(nn.Module):
                 ece += diff_in_bin.item()
         return ece
 
-=======
-          
-def unnormalize(tensor):
-    """ Unnormalize from [-1, 1] to [0, 255] """
-    return ((tensor + 1) * 127.5).clamp(0, 255).byte()
-
-def mix_dataset(dataloader_1, dataloader_2, save_dir=f'./data/FashionMNIST-bnnaug'):
-    """
-    Mix two dataset together
-    """
-    imgs_mixed, labels_mixed = [], []
-    for imgs, labels in dataloader_1:
-        imgs_mixed.append(imgs)
-        labels_mixed.append(labels)
-    for imgs, labels in dataloader_2:
-        imgs_mixed.append(imgs)
-        labels_mixed.append(labels)
-    imgs_mixed = torch.cat(imgs_mixed, axis=0).squeeze()
-    labels_mixed = torch.cat(labels_mixed, axis=0)
-    imgs_mixed = unnormalize(imgs_mixed)
-
-    np.save(os.path.join(save_dir, f'imgs.npy'), imgs_mixed.numpy())
-    np.save(os.path.join(save_dir, f'labels.npy'), imgs_mixed.numpy())
-    print(f'mixed dataset saved')
->>>>>>> origin/main
 
 
 

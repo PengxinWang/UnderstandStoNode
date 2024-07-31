@@ -31,7 +31,6 @@ def consistency_loss(pred_bnn, pred_det, epsilon, anta=1e-1):
     loss = 0.5 * cross_entropy(pred_bnn, pred_det) + 0.5 * anta * torch.norm(epsilon_flatten, p=2, dim=1).mean()
     return loss
 
-<<<<<<< HEAD
 def generate_noise(dataset, model, log_dir, input_dir, save_dir, ck_path, n_classes, in_channel, downlaod, n_component, num_iter, batch_size, lr, anta):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     writer = SummaryWriter(log_dir=log_dir)
@@ -41,19 +40,6 @@ def generate_noise(dataset, model, log_dir, input_dir, save_dir, ck_path, n_clas
                                  train=True, val=False,
                                  batch_size=batch_size,
                                  download=downlaod)
-=======
-def generate_noise(dataset, model, log_dir, input_dir, save_dir, save_dir_noisy, ck_path, n_classes, in_channel, downlaod, n_component, num_iter, batch_size, lr, anta):
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    writer = SummaryWriter(log_dir=log_dir)
-
-    if dataset=='FashionMNIST':
-        trainloader = get_dataloader(data_dir=input_dir,
-                                 train=True, val=False,
-                                 batch_size=batch_size,
-                                 download=downlaod)
-    else:
-        raise ValueError(f'{dataset} not supported')
->>>>>>> origin/main
 
     if model=='storesnet18':
         bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_component, stochastic=1).to(device)
@@ -115,30 +101,13 @@ def generate_noise(dataset, model, log_dir, input_dir, save_dir, save_dir_noisy,
 
 
     imgs_noisy_numpy = imgs_noisy.detach().cpu().numpy()
-<<<<<<< HEAD
-=======
-    labels_noisy_numpy = labels_noisy.cpu().numpy()
->>>>>>> origin/main
     
     imgs_clean_numpy = imgs_clean.detach().cpu().numpy()
     labels_clean_numpy = labels_clean.cpu().numpy()
 
-<<<<<<< HEAD
     np.save(os.path.join(save_dir, f'noisy_imgs.npy'), imgs_noisy_numpy)
     np.save(os.path.join(save_dir, f'imgs.npy'), imgs_clean_numpy)
     np.save(os.path.join(save_dir, f'labels.npy'), labels_clean_numpy)
-=======
-    imgs_all_numpy = np.concatenate((imgs_clean_numpy, imgs_noisy_numpy), axis=0)
-    labels_all_numpy = np.concatenate((labels_clean_numpy, labels_noisy_numpy), axis=0)
-    log.info(f'Combined Dataset shape: {imgs_all_numpy.shape}')
-
-    np.save(os.path.join(save_dir_noisy, f'imgs.npy'), imgs_noisy_numpy)
-    np.save(os.path.join(save_dir_noisy, f'labels.npy'), labels_noisy_numpy)
-
-    np.save(os.path.join(save_dir, f'imgs.npy'), imgs_all_numpy)
-    np.save(os.path.join(save_dir, f'labels.npy'), labels_all_numpy)
-
->>>>>>> origin/main
 
 @hydra.main(config_path='conf_generate_noise', config_name='generate_noise_v1_config')
 def main(cfg: DictConfig):
@@ -149,10 +118,6 @@ def main(cfg: DictConfig):
     dataset_name = cfg.dataset.name
     input_dir = to_absolute_path(cfg.dataset.input_dir)
     save_dir = to_absolute_path(cfg.dataset.save_dir)
-<<<<<<< HEAD
-=======
-    save_dir_noisy = to_absolute_path(cfg.dataset.save_dir_noisy)
->>>>>>> origin/main
     n_classes = cfg.dataset.n_classes
     in_channel = cfg.dataset.in_channel
     download = cfg.dataset.download
@@ -170,10 +135,6 @@ def main(cfg: DictConfig):
     torch.manual_seed(seed)
     ck_path = os.path.join(ck_dir, f'storesnet18_epoch{epoch}.pt')
     os.makedirs(save_dir, exist_ok=True)
-<<<<<<< HEAD
-=======
-    os.makedirs(save_dir_noisy, exist_ok=True)
->>>>>>> origin/main
 
     log.info(f'Experiment: {experiment_name}')
     log.info(f'  -Seed: {seed}')
@@ -181,12 +142,7 @@ def main(cfg: DictConfig):
 
     log.info(f'Dataset: {dataset_name}')    
     log.info(f'  -Input Directory: {input_dir}')
-<<<<<<< HEAD
     log.info(f'  -Save Directory: {save_dir}') 
-=======
-    log.info(f'  -Save Directory: {save_dir}')
-    log.info(f'  -Save Directory Noisy: {save_dir_noisy}')    
->>>>>>> origin/main
     log.info(f'  -Number of Classes: {n_classes}')
     log.info(f'  -Number of Input Channels: {in_channel}')
     log.info(f'  -Download: {download}')
@@ -202,11 +158,7 @@ def main(cfg: DictConfig):
     log.info(f'  -Learning Rate: {lr}')
     log.info(f'  -Anta (regularization factor): {anta}')
 
-<<<<<<< HEAD
     generate_noise(dataset=dataset_name, model=model_name, log_dir=logdir, input_dir=input_dir, save_dir=save_dir, ck_path=ck_path, n_classes=n_classes, in_channel=in_channel, downlaod=download,
-=======
-    generate_noise(dataset=dataset_name, model=model_name, log_dir=logdir, input_dir=input_dir, save_dir=save_dir, save_dir_noisy=save_dir_noisy, ck_path=ck_path, n_classes=n_classes, in_channel=in_channel, downlaod=download,
->>>>>>> origin/main
                    n_component=n_component, num_iter=num_iter, batch_size=batch_size, lr=lr, anta=anta)
 
 if __name__ == '__main__':

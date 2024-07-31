@@ -27,11 +27,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, perceptual_ck_path, perceptual_layers, 
                                  train=True, val=True,
                                  download=download,
                                  batch_size=batch_size,
-<<<<<<< HEAD
                                  train_unet=0.8)
-=======
-                                 train_unet=0.3)
->>>>>>> origin/main
     
     bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=1).to(device)
     det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=2).to(device)

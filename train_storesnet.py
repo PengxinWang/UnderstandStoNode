@@ -22,32 +22,6 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
           lr, batch_size, weight_decay, milestones, final_factor, geo_aug, n_component, n_sample, entropy_weight, kl_min, kl_max, prior_mean, prior_std, post_mean_init, post_std_init):
     """
     Trains the specified model on the given dataset and logs the training process.
-<<<<<<< HEAD
-=======
-
-    Args:
-        model (str): The model architecture to use (e.g., 'storesnet18').
-        dataset (str): The dataset to use for training and validation.
-        log_dir (str): Directory where TensorBoard logs will be saved.
-        data_dir (str): Directory where the dataset is stored.
-        n_classes (int): Number of classes in the dataset.
-        in_channel (int): Number of input channels for the model.
-        ck_dir (str): Directory where model checkpoints will be saved.
-        n_epoch (int): Number of epochs to train the model.
-        lr (float): Learning rate for the optimizer.
-        batch_size (int): Batch size for the DataLoader.
-        weight_decay (float): Weight decay (L2 regularization) for the optimizer.
-        geo_aug (bool): Whether to apply geometrical augmentations to the training data.
-        n_component (int): Number of Gaussian components for posterior.
-        n_sample (int): Number of Monte Carlo sampling in calculating vi_loss.
-        entropy_weight (float): Weight for entropy of posterior in kl regularization.
-        kl_min (float): Starting kl_weight, from min_kl_weight to max_kl_weight for annealing.
-        kl_max (float: Ending kl_weight.
-        prior_std (float): Std for prior, to regularize post_std, i.e. post entropy.
-
-    Returns:
-        None
->>>>>>> origin/main
     """
     writer = SummaryWriter(log_dir=log_dir)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -88,11 +62,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
                 loss.backward()
                 optimizer.step()
 
-<<<<<<< HEAD
                 pbar.set_postfix({'Loss': f'{epoch_loss.item()/(batch_id+1):.4f}', 'nll': f'{epoch_nll.item()/(batch_id+1):.4f}'})
-=======
-                pbar.set_postfix({'Loss': f'{epoch_loss.item()/(batch_id+1):.4f}', 'nll': f'{nll.item()/(batch_id+1):.4f}'})
->>>>>>> origin/main
                 pbar.update()
         scheduler.step()
 
@@ -133,18 +103,10 @@ def main(cfg: DictConfig):
 
     model = cfg.model.name
     ck_dir = to_absolute_path(cfg.model.ck_dir)
-<<<<<<< HEAD
     n_component = cfg.model.n_component
 
     dataset_name =cfg.dataset.name
     data_dir = to_absolute_path(cfg.dataset.dir)
-=======
-    os.makedirs(ck_dir, exist_ok=True)
-    n_component = cfg.model.n_component
-
-    dataset_clean =cfg.dataset.name_clean
-    datadir_clean = to_absolute_path(cfg.dataset.dir_clean)
->>>>>>> origin/main
     n_classes = cfg.dataset.n_classes
     in_channel = cfg.dataset.in_channel
 
@@ -164,7 +126,6 @@ def main(cfg: DictConfig):
     post_mean_init = cfg.params.post_mean_init
     post_std_init = cfg.params.post_std_init
 
-<<<<<<< HEAD
     os.makedirs(ck_dir, exist_ok=True)
 
     log.info(f'Experiment: {experiment_name}')
@@ -201,44 +162,6 @@ def main(cfg: DictConfig):
             dataset=dataset_name,
             log_dir=log_dir,
             data_dir=data_dir,
-=======
-    log.info(f'Experiment: {experiment_name}')
-    log.info(f'Seed: {seed}')
-    log.info(f'log_dir: {log_dir}')
-
-    log.info(f'Dataset: {dataset_clean}')
-    log.info(f'clean_data directory: {datadir_clean}') 
-    log.info(f'n_classes: {n_classes}')
-    log.info(f'in_channel: {in_channel}')
-    
-    log.info(f'Model: {model}')
-    log.info(f'ck_dir: {ck_dir}')
-
-    log.info(f'Training with')
-    log.info(f'batch size: {batch_size}')
-    log.info(f'learning rate: {lr}')
-    log.info(f'milestones: {milestones}')
-    log.info(f'final factor: {final_factor}')
-    log.info(f'epochs: {n_epoch}')
-
-    log.info(f'geometrical augmentation: {geo_aug}')
-    log.info(f'weight decay: {weight_decay}')
-
-    log.info(f'entropy_weight: {entropy_weight}')
-    log.info(f'n_component: {n_component}')
-    log.info(f'n_sample: {n_sample}')
-    log.info(f'kl_min: {kl_min}, kl_max: {kl_max}')
-    log.info(f'prior_mean: {prior_mean}')  
-    log.info(f'prior_std: {prior_std}')   
-    log.info(f'post_mean_init: {post_mean_init}')  
-    log.info(f'post_std_init: {post_std_init}')  
-
-    torch.manual_seed(seed)
-    stotrain(model=model,
-            dataset=dataset_clean,
-            log_dir=log_dir,
-            data_dir=datadir_clean,
->>>>>>> origin/main
             n_classes=n_classes,
             in_channel=in_channel,
             ck_dir=ck_dir,
