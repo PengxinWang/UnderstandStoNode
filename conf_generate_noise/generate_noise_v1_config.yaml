@@ -16,19 +16,9 @@ params:
   num_iter: 100
 
 dataset:
-<<<<<<< HEAD
   name: CIFAR10
   input_dir: ./data/CIFAR10
   in_channel: 3
   n_classes: 10
   download: False
   save_dir: ./data/CIFAR10-aug_v1
-=======
-  name: FashionMNIST
-  input_dir: ./data/FashionMNIST
-  in_channel: 1
-  n_classes: 10
-  download: False
-  save_dir: ./data/FashionMNIST-aug_v1
-  save_dir_noisy: ./data/FashionMNIST-noisy_v1
->>>>>>> origin/main

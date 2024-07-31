@@ -20,14 +20,8 @@ params:
   weight_decay: 5e-4
 
 dataset:
-<<<<<<< HEAD
   name: CIFAR10
   dir: ./data/CIFAR10
   in_channels: 3
-=======
-  name: FashionMNIST
-  dir: ./data/FashionMNIST
-  in_channels: 1
->>>>>>> origin/main
   n_classes: 10
   download: False

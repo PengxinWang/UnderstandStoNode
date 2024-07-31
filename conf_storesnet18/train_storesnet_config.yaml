@@ -12,11 +12,7 @@ experiment:
 params:
   n_epoch: 200
   batch_size: 128
-<<<<<<< HEAD
   lr: 0.01
-=======
-  lr: 0.1
->>>>>>> origin/main
   geo_aug: True
   milestones: [0.5, 0.9]
   final_factor: 0.3
@@ -31,14 +27,8 @@ params:
   post_std_init: [0.40, 0.05]
 
 dataset:
-<<<<<<< HEAD
   name: CIFAR10
   dir: ./data/CIFAR10
   in_channel: 3
-=======
-  name_clean: FashionMNIST
-  dir_clean: ./data/FashionMNIST
-  in_channel: 1
->>>>>>> origin/main
   n_classes: 10
   download: False

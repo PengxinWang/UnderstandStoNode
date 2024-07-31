@@ -11,7 +11,6 @@ params:
   batch_size: 512
 
 dataset:
-<<<<<<< HEAD
   name: CIFAR10
   input_dir: ./data/CIFAR10
   in_channels: 3
@@ -19,12 +18,3 @@ dataset:
   download: False
   save_dir: ./data/CIFAR10-aug_v2
   save_dir_noisy: ./data/CIFAR10-noisy_v2
-=======
-  name: FashionMNIST
-  input_dir: ./data/FashionMNIST
-  in_channels: 1
-  n_classes: 10
-  download: False
-  save_dir: ./data/FashionMNIST-aug_v2
-  save_dir_noisy: ./data/FashionMNIST-noisy_v2
->>>>>>> origin/main
