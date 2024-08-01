@@ -1,3 +1,6 @@
 *.pt
-
 output/
+data/
+checkpoints/
+__pycache__/
+results/

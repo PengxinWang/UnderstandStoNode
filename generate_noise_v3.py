@@ -45,12 +45,12 @@ def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, downlaod, bat
         imgs_noisy.append(imgs_noisy_batch.detach().cpu())
 
     imgs_noisy = torch.cat(imgs_noisy, dim=0)
-    imgs_noisy = unnormalize(imgs_noisy)
+    imgs_noisy = unnormalize(imgs_noisy).permute(0,2,3,1)
     labels_noisy =  torch.cat(labels_noisy, dim=0)
     log.info(f'Noisy Dataset shape: {imgs_noisy.shape}')
 
     imgs_clean = torch.cat(imgs_clean, dim=0)
-    imgs_clean = unnormalize(imgs_clean)
+    imgs_clean = unnormalize(imgs_clean).permute(0,2,3,1)
     labels_clean =  torch.cat(labels_clean, dim=0)
     log.info(f'Clean Dataset shape: {imgs_noisy.shape}')
 

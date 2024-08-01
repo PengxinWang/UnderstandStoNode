@@ -11,8 +11,8 @@ noisy_imgs = np.load(noisy_imgs_path).squeeze().astype(np.float32)/255
 fig, axes = plt.subplots(4, 3, figsize=(12, 16))
 
 for i in range(4):
-    clean_img = clean_imgs[i].transpose(1,2,0)
-    noisy_img = noisy_imgs[i].transpose(1,2,0)
+    clean_img = clean_imgs[i]
+    noisy_img = noisy_imgs[i]
     noise = np.abs(noisy_img - clean_img)
     pixel_x, pixel_y = 0, 0
     img_norm = np.linalg.norm(clean_img)

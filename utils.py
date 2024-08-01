@@ -29,7 +29,6 @@ class Augmented_Dataset(Dataset):
             img = self.noisy_imgs[idx]
         else:
             img = self.clean_imgs[idx]
-        
         label = torch.tensor(self.labels[idx]).long()
         if self.transform:
             img = self.transform(img)
