@@ -5,7 +5,6 @@ import torch.optim as optim
 
 from tqdm import tqdm
 from data import get_dataloader
-import matplotlib.pyplot as plt
 
 import hydra
 import logging
@@ -14,7 +13,6 @@ from omegaconf import DictConfig
 from torch.utils.tensorboard import SummaryWriter
 
 from model import *
-from utils import ECE
 import warnings
 warnings.filterwarnings("ignore")
 

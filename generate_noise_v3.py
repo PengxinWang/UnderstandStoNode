@@ -18,7 +18,7 @@ warnings.filterwarnings("ignore")
 
 log = logging.getLogger(__name__)
 
-def generate_noise(input_dir, save_dir, save_dir_noisy, unet_ck_path, in_channels, downlaod, batch_size):
+def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, downlaod, batch_size):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     trainloader = get_dataloader(data_dir=input_dir,

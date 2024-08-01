@@ -43,11 +43,7 @@ def get_dataloader(data_dir,
             trainset, _ = random_split(dataset, [train_size, len(dataset)-train_size]) 
 
     elif dataset in ('CIFAR10-bnnaug', 'TinyImageNet-bnnaug'):
-        imgs_path = os.path.join(data_dir, f'imgs.npy')
-        labels_path = os.path.join(data_dir, f'labels.npy')
-        imgs = np.load(imgs_path)
-        labels = np.load(labels_path)
-        trainset = Augmented_Dataset(imgs, labels, transform=train_transform)
+        trainset = Augmented_Dataset(data_dir=data_dir, transform=train_transform)
 
     elif dataset in ('CIFAR10-C', 'TinyImageNet-C'):
         corrupt_types = ['saturate', 'shot_noise', 'gaussian_noise', 'zoom_blur', 'glass_blur', 'brightness', 'contrast', 'motion_blur', 'pixelate', 'snow', 'speckle_noise', 'spatter', 'gaussian_blur', 'frost', 'defocus_blur',
