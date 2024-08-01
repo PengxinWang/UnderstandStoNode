@@ -22,24 +22,27 @@ def process_data(results):
         intensities = sorted(set(d['intensity'] for d in model_data))
         acc_data = {intensity: [] for intensity in intensities}
         ece_data = {intensity: [] for intensity in intensities}
+        nll_data = {intensity: [] for intensity in intensities}
 
         for entry in model_data:
             intensity = entry['intensity']
             acc_data[intensity].append(entry['acc'])
             ece_data[intensity].append(entry['ece'])
+            nll_data[intensity].append(entry['nll'])  # Added NLL processing
 
         processed_data[model_name] = {
             'intensities': intensities,
             'accuracies': [sum(acc_data[i])/len(acc_data[i]) for i in intensities],
-            'eces': [sum(ece_data[i])/len(ece_data[i]) for i in intensities]
+            'eces': [sum(ece_data[i])/len(ece_data[i]) for i in intensities],
+            'nlls': [sum(nll_data[i])/len(nll_data[i]) for i in intensities]  # Added NLL
         }
     return processed_data
 
 def plot_results(processed_data):
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(18, 6))
     
     # Plot Accuracy
-    plt.subplot(1, 2, 1)
+    plt.subplot(1, 3, 1)
     for model_name, data in processed_data.items():
         plt.plot(data['intensities'], data['accuracies'], marker='o', label=model_name)
     plt.xlabel('Corruption Intensity')
@@ -49,7 +52,7 @@ def plot_results(processed_data):
     plt.grid(True)
 
     # Plot ECE
-    plt.subplot(1, 2, 2)
+    plt.subplot(1, 3, 2)
     for model_name, data in processed_data.items():
         plt.plot(data['intensities'], data['eces'], marker='o', label=model_name)
     plt.xlabel('Corruption Intensity')
@@ -57,7 +60,17 @@ def plot_results(processed_data):
     plt.title('ECE vs. Corruption Intensity')
     plt.legend()
     plt.grid(True)
-    
+
+    # Plot NLL
+    plt.subplot(1, 3, 3)
+    for model_name, data in processed_data.items():
+        plt.plot(data['intensities'], data['nlls'], marker='o', label=model_name)
+    plt.xlabel('Corruption Intensity')
+    plt.ylabel('NLL')
+    plt.title('NLL vs. Corruption Intensity')
+    plt.legend()
+    plt.grid(True)
+
     plt.suptitle('Evaluation Results Across Models')
     plt.tight_layout(rect=[0, 0, 1, 0.95])
     plt.show()
