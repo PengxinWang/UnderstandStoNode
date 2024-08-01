@@ -34,7 +34,7 @@ def eval(model, dataset, data_dir, device, test_bsize=512, download=False, inten
                                 download=download,
                                 intensity=intensity)
     
-    ece_eval = ECE(n_bins=15)
+    ece_eval = ECE(n_bins=15) 
     pred_total = []
     labels_total = []
     correct_count = 0
@@ -46,11 +46,10 @@ def eval(model, dataset, data_dir, device, test_bsize=512, download=False, inten
         for imgs, labels in testloader:
             imgs, labels = imgs.to(device), labels.to(device)
             pred = model(imgs)
-            pred = pred.exp()
-
-            nll = F.nll_loss(pred, labels)
+            nll = F.nll_loss(pred, labels) # the input of nll_loss should be log_probability
             nll_total += nll.item() * labels.size(0)
 
+            pred = pred.exp()
             _, pred_id = torch.max(pred, dim=-1)
             correct_count += (pred_id==labels).sum().item()
 
@@ -61,7 +60,7 @@ def eval(model, dataset, data_dir, device, test_bsize=512, download=False, inten
 
     pred_total = torch.cat(pred_total, axis=0)
     labels_total = torch.cat(labels_total, axis=0)
-    ece = ece_eval(pred_total, labels_total)
+    ece = ece_eval(pred_total, labels_total) # the input of ece_eval should be probability
     return acc, ece, nll
 
 @hydra.main(config_path='conf_resnet18', config_name='eval_v3_config')

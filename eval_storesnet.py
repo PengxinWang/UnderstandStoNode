@@ -24,6 +24,7 @@ def stoeval(model, dataset, data_dir, test_bsize=512, download=False, intensity=
     Returns:
         acc (float): Accuracy of the model on the test set.
         ece (float): Expected Calibration Error of the model on the test set.
+        nll (float): Negative Log-Likelihood of the model on the test set.
     """
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -38,6 +39,7 @@ def stoeval(model, dataset, data_dir, test_bsize=512, download=False, intensity=
     pred_total = []
     labels_total = []
     correct_count = 0
+    nll_total = 0.
     size_testset = len(testloader) * test_bsize
 
     model.eval()
@@ -45,6 +47,9 @@ def stoeval(model, dataset, data_dir, test_bsize=512, download=False, intensity=
         for imgs, labels in testloader:
             imgs, labels = imgs.to(device), labels.to(device)
             pred = model(imgs).mean(dim=1)
+            nll = F.nll_loss(pred, labels) # the input of nll_loss should be log_probability
+            nll_total += nll.item() * labels.size(0)
+
             pred = pred.exp()
             _, pred_id = torch.max(pred, dim=-1)
             correct_count += (pred_id==labels).sum()
@@ -52,10 +57,12 @@ def stoeval(model, dataset, data_dir, test_bsize=512, download=False, intensity=
             pred_total.append(pred)
             labels_total.append(labels)
     acc = correct_count.item()/size_testset
+    nll = nll_total/size_testset
+
     pred_total = torch.cat(pred_total, axis=0)
     labels_total = torch.cat(labels_total, axis=0)
     ece = ece_eval(pred_total, labels_total)
-    return acc, ece
+    return acc, ece, nll
 
 @hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_config')
 def main(cfg: DictConfig):
@@ -102,6 +109,7 @@ def main(cfg: DictConfig):
 
     accuracies = {i: [] for i in range(6)}
     eces = {i: [] for i in range(6)}
+    nlls = {i: [] for i in range(6)}
 
     results = {}
     for epoch in n_epochs:
@@ -110,7 +118,7 @@ def main(cfg: DictConfig):
         model.load_state_dict(torch.load(test_ck_path))
         log.info(f'Evaluating model at epoch {epoch}')
 
-        acc_clean, ece_clean = stoeval(model=model,
+        acc_clean, ece_clean, nll_clean = stoeval(model=model,
                                     dataset=dataset_name,
                                     data_dir=datadir_clean,
                                     test_bsize=test_bsize,
@@ -118,17 +126,20 @@ def main(cfg: DictConfig):
         
         accuracies[0].append(acc_clean)
         eces[0].append(ece_clean)
+        nlls[0].append(nll_clean)
+
         if model_name not in results:
             results[model_name] = []
         results[model_name].append({
             'epoch': epoch,
             'intensity': 0,  
             'acc': acc_clean,
-            'ece': ece_clean
+            'ece': ece_clean,
+            'nll': nll_clean
         })
 
         for intensity in range(1, 6):
-            acc_corrupted, ece_corrupted = stoeval(model=model,
+            acc_corrupted, ece_corrupted, nll_corrupted = stoeval(model=model,
                                                 dataset=f'{dataset_name}-C',
                                                 data_dir=datadir_corrupted,
                                                 test_bsize=test_bsize,
@@ -136,20 +147,23 @@ def main(cfg: DictConfig):
                                                 intensity=intensity)
             accuracies[intensity].append(acc_corrupted)
             eces[intensity].append(ece_corrupted)
+            nlls[intensity].append(nll_corrupted)
             results[model_name].append({
                 'epoch': epoch,
                 'intensity': intensity,
                 'acc': acc_corrupted,
-                'ece': ece_corrupted
+                'ece': ece_corrupted,
+                'nll': nll_corrupted
             })
 
         log.info("Evaluation Results:")
-        log.info("+--------------------+----------+----------+")
-        log.info("| Dataset            | Accuracy | ECE      |")
-        log.info("+--------------------+----------+----------+")
+        log.info("+--------------------+----------+----------+----------+")
+        log.info("| Dataset            | Accuracy | ECE      | NLL      |")
+        log.info("+--------------------+----------+----------+----------+")
         for intensity in range(6):
-            log.info(f"| Corrupted Intensity {intensity} | {accuracies[intensity][-1]:.4f} | {eces[intensity][-1]:.4f} |")
-        log.info("+--------------------+----------+----------+")
+            log.info(f"| Corrupted Intensity {intensity} | {accuracies[intensity][-1]:.4f} | {eces[intensity][-1]:.4f} | {nlls[intensity][-1]:.4f} |")
+        log.info("+--------------------+----------+----------+----------+")
+
 
     # Save results to a JSON file
     results_file = os.path.join(res_dir, 'evaluation_results.json')
@@ -158,11 +172,12 @@ def main(cfg: DictConfig):
         log.info(f'Results saved to {results_file}')
 
         # Plot figures for evaluation
+        # Plot figures for evaluation
         intensities = list(range(1, 6))    
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(15, 6))
         
         # Accuracy plot
-        plt.subplot(1, 2, 1)
+        plt.subplot(1, 3, 1)
         for k, epoch in enumerate(n_epochs):
             plt.plot(intensities, [accuracies[i][k] for i in intensities], marker='o', label=f'Epoch {epoch+1}')
         plt.xlabel('Corruption Intensity')
@@ -173,12 +188,23 @@ def main(cfg: DictConfig):
         plt.grid(True)
 
         # ECE plot
-        plt.subplot(1, 2, 2)
+        plt.subplot(1, 3, 2)
         for k, epoch in enumerate(n_epochs):
             plt.plot(intensities, [eces[i][k] for i in intensities], marker='o', label=f'Epoch {epoch+1}')
         plt.xlabel('Corruption Intensity')
         plt.ylabel('ECE')
         plt.title('ECE vs. Corruption Intensity')
+        plt.xticks(intensities)
+        plt.legend()
+        plt.grid(True)
+
+        # NLL plot
+        plt.subplot(1, 3, 3)
+        for k, epoch in enumerate(n_epochs):
+            plt.plot(intensities, [nlls[i][k] for i in intensities], marker='o', label=f'Epoch {epoch+1}')
+        plt.xlabel('Corruption Intensity')
+        plt.ylabel('NLL')
+        plt.title('NLL vs. Corruption Intensity')
         plt.xticks(intensities)
         plt.legend()
         plt.grid(True)

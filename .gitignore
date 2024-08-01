@@ -1,5 +1,5 @@
 *.pt
-output/
+outputs/
 data/
 checkpoints/
 __pycache__/
