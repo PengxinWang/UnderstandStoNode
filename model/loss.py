@@ -46,7 +46,7 @@ class PerceptualLoss(nn.Module):
         loss = 0.
         for in_f, o_f in zip(output_features, input_features):
             if in_f[0] == 'output layer':
-                loss += self.prediction_weight * F.cross_entropy(input=in_f[1], target=o_f[1])
+                loss += self.prediction_weight * cross_entropy(input=in_f[1], target=o_f[1])
             elif in_f[0] == 'input layer':
                 loss += self.input_weight * F.mse_loss(in_f[1], o_f[1])
             else:

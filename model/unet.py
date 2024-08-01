@@ -21,7 +21,6 @@ class UNet(nn.Module):
 
         # Define the decoder blocks
         self.upconv4 = nn.ConvTranspose2d(features * 16, features * 8, kernel_size=2, stride=2)  # New upconv
-<<<<<<< HEAD
         self.decoder4 = UNet._block(features * 8, features * 8, name="dec4")  # New decoder
         self.upconv3 = nn.ConvTranspose2d(features * 8, features * 4, kernel_size=2, stride=2)
         self.decoder3 = UNet._block(features * 4, features * 4, name="dec3")
@@ -29,15 +28,6 @@ class UNet(nn.Module):
         self.decoder2 = UNet._block(features * 2, features * 2, name="dec2")
         self.upconv1 = nn.ConvTranspose2d(features * 2, features, kernel_size=2, stride=2)
         self.decoder1 = UNet._block(features, features, name="dec1")
-=======
-        self.decoder4 = UNet._block((features * 8) * 2, features * 8, name="dec4")  # New decoder
-        self.upconv3 = nn.ConvTranspose2d(features * 8, features * 4, kernel_size=2, stride=2)
-        self.decoder3 = UNet._block((features * 4) * 2, features * 4, name="dec3")
-        self.upconv2 = nn.ConvTranspose2d(features * 4, features * 2, kernel_size=2, stride=2)
-        self.decoder2 = UNet._block((features * 2) * 2, features * 2, name="dec2")
-        self.upconv1 = nn.ConvTranspose2d(features * 2, features, kernel_size=2, stride=2)
-        self.decoder1 = UNet._block(features * 2, features, name="dec1")
->>>>>>> origin/main
 
         self.conv = nn.Conv2d(in_channels=features, out_channels=out_channels, kernel_size=1)
         self._initialize_weights()
@@ -53,41 +43,25 @@ class UNet(nn.Module):
         dec4 = self.upconv4(bottleneck)
         if dec4.size() != enc4.size():
             dec4 = nn.functional.pad(dec4, [0, enc4.size(3) - dec4.size(3), 0, enc4.size(2) - dec4.size(2)])
-<<<<<<< HEAD
         dec4 = dec4+enc4
-=======
-        dec4 = torch.cat((dec4, enc4), dim=1)
->>>>>>> origin/main
         dec4 = self.decoder4(dec4) 
 
         dec3 = self.upconv3(dec4)
         if dec3.size() != enc3.size():
             dec3 = nn.functional.pad(dec3, [0, enc3.size(3) - dec3.size(3), 0, enc3.size(2) - dec3.size(2)])
-<<<<<<< HEAD
         dec3 = dec3+enc3
-=======
-        dec3 = torch.cat((dec3, enc3), dim=1)
->>>>>>> origin/main
         dec3 = self.decoder3(dec3)
 
         dec2 = self.upconv2(dec3)
         if dec2.size() != enc2.size():
             dec2 = nn.functional.pad(dec2, [0, enc2.size(3) - dec2.size(3), 0, enc2.size(2) - dec2.size(2)])
-<<<<<<< HEAD
         dec2 = dec2+enc2
-=======
-        dec2 = torch.cat((dec2, enc2), dim=1)
->>>>>>> origin/main
         dec2 = self.decoder2(dec2)
 
         dec1 = self.upconv1(dec2)
         if dec1.size() != enc1.size():
             dec1 = nn.functional.pad(dec1, [0, enc1.size(3) - dec1.size(3), 0, enc1.size(2) - dec1.size(2)])
-<<<<<<< HEAD
         dec1 = dec1+enc1
-=======
-        dec1 = torch.cat((dec1, enc1), dim=1)
->>>>>>> origin/main
         dec1 = self.decoder1(dec1)
 
         output = torch.sigmoid(self.conv(dec1))
