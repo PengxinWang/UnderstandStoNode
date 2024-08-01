@@ -1,6 +1,6 @@
 unet:
   ck_dir: "./checkpoints/unet"
-  epoch: 20
+  epoch: 100
 
 experiment:
   name: "generate noise and make new dataset v2"
@@ -17,4 +17,3 @@ dataset:
   n_classes: 10
   download: False
   save_dir: ./data/CIFAR10-aug_v2
-  save_dir_noisy: ./data/CIFAR10-noisy_v2

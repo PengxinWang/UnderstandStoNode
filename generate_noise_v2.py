@@ -2,11 +2,10 @@ import torch
 
 from model import *
 from data import get_dataloader
-from utils import cross_entropy, unnormalize
+from utils import unnormalize
 
 import os
 import numpy as np
-from tqdm import tqdm
 
 import hydra
 import logging
@@ -62,7 +61,7 @@ def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, downlaod, bat
     np.save(os.path.join(save_dir, f'labels.npy'), labels_clean_numpy)
 
 
-@hydra.main(config_path='conf_generate_noise', config_name='generate_noise_v3_config')
+@hydra.main(config_path='conf_generate_noise', config_name='generate_noise_v2_config')
 def main(cfg: DictConfig):
     experiment_name = cfg.experiment.name
     seed = cfg.experiment.seed

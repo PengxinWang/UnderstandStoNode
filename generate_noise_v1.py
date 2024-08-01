@@ -43,7 +43,7 @@ def generate_noise(dataset, model, log_dir, input_dir, save_dir, ck_path, n_clas
 
     if model=='storesnet18':
         bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_component, stochastic=1).to(device)
-        det_model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_component, stochastic=0).to(device)
+        det_model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_component, stochastic=2).to(device)
     else:
         raise ValueError(f'{model} not supported')
 

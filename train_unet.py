@@ -65,7 +65,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, input_dir, log_dir, download, n_classes
                 bnn_pred = bnn_model(imgs).mean(dim=1).exp()
                 det_pred = det_model(noisy_imgs).mean(dim=1).exp()
                 ce_loss, l2_loss = consistency_loss(bnn_pred, det_pred, epsilon=epsilon ,anta=anta)
-                loss = 0*ce_loss + l2_loss
+                loss = ce_loss + l2_loss
                 epoch_loss += loss.item()
                 epoch_ce_loss += ce_loss.item()
 
@@ -77,21 +77,22 @@ def train_unet(unet_ck_dir, bnn_ck_path, input_dir, log_dir, download, n_classes
                 pbar.update()
         
         unet.eval()
-        with tqdm(total=len(valloader), desc=f'Epoch {epoch}/{n_epochs}') as pbar:
-            for batch_id, (imgs, _) in enumerate(valloader):
-                imgs = imgs.to(device)
-                noisy_imgs = unet(imgs)
-                epsilon = noisy_imgs - imgs
-                bnn_pred = bnn_model(imgs).mean(dim=1).exp()
-                det_pred = det_model(noisy_imgs).mean(dim=1).exp()
+        with torch.no_grad():
+            with tqdm(total=len(valloader), desc=f'Epoch {epoch}/{n_epochs}') as pbar:
+                for batch_id, (imgs, _) in enumerate(valloader):
+                    imgs = imgs.to(device)
+                    noisy_imgs = unet(imgs)
+                    epsilon = noisy_imgs - imgs
+                    bnn_pred = bnn_model(imgs).mean(dim=1).exp()
+                    det_pred = det_model(noisy_imgs).mean(dim=1).exp()
 
-                ce_loss_val, l2_loss_val = consistency_loss(bnn_pred, det_pred, epsilon=epsilon, anta=anta)
-                loss_val = 0*ce_loss_val + l2_loss_val
-                epoch_loss_val += loss_val.item()
-                epoch_ce_loss_val += ce_loss_val.item()
+                    ce_loss_val, l2_loss_val = consistency_loss(bnn_pred, det_pred, epsilon=epsilon, anta=anta)
+                    loss_val = ce_loss_val + l2_loss_val
+                    epoch_loss_val += loss_val.item()
+                    epoch_ce_loss_val += ce_loss_val.item()
 
-                pbar.set_postfix({'ce_loss_val': f'{ce_loss_val:.4f}', 'l2_loss_val':f'{l2_loss_val:4f}', 'loss_val':f'{epoch_loss_val/(1+batch_id):.4f}'})
-                pbar.update()
+                    pbar.set_postfix({'ce_loss_val': f'{ce_loss_val:.4f}', 'l2_loss_val':f'{l2_loss_val:4f}', 'loss_val':f'{epoch_loss_val/(1+batch_id):.4f}'})
+                    pbar.update()
 
         writer.add_scalars('Loss', {'train': epoch_loss/len(trainloader), 'val': epoch_loss_val/len(valloader)}, epoch)
         writer.add_scalars('ce loss', {'train': epoch_ce_loss/len(trainloader), 'val': epoch_ce_loss_val/len(valloader)}, epoch)

@@ -2,27 +2,28 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the image data from the .npy file
-clean_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug_v1/imgs.npy'
-noisy_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug_v1/noisy_imgs.npy'
-clean_imgs = np.load(clean_imgs_path).squeeze()
-noisy_imgs = np.load(noisy_imgs_path).squeeze()
-
-# Verify the shape of the data
-print(f"Shape of clean imgs: {clean_imgs.shape}")
-print(f"Shape of clean imgs: {noisy_imgs.shape}")
+clean_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug_v2/imgs.npy'
+noisy_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug_v2/noisy_imgs.npy'
+clean_imgs = np.load(clean_imgs_path).squeeze().astype(np.float32)/255
+noisy_imgs = np.load(noisy_imgs_path).squeeze().astype(np.float32)/255
 
 # Set up the matplotlib figure and axis
-fig, axes = plt.subplots(2, 3, figsize=(12, 16))
+fig, axes = plt.subplots(4, 3, figsize=(12, 16))
 
-for i in range(2):
+for i in range(4):
     clean_img = clean_imgs[i].transpose(1,2,0)
     noisy_img = noisy_imgs[i].transpose(1,2,0)
-    noise = noisy_img - clean_img
-    img_norm = np.linalg.norm(clean_img)/clean_img.size
-    noise_norm = np.linalg.norm(noise)/noise.size
-    print("Clean Image Min/Max:", clean_img.min(), clean_img.max())
-    print("Noisy Image Min/Max:", noisy_img.min(), noisy_img.max())
-    print("Noise Min/Max:", noise.min(), noise.max())
+    noise = np.abs(noisy_img - clean_img)
+    pixel_x, pixel_y = 0, 0
+    print(f'Check corresponding pixel at ({pixel_x}, {pixel_y}):')
+    print(f'Clean image pixel: {clean_img[pixel_y, pixel_x]}')
+    print(f'Noisy image pixel: {noisy_img[pixel_y, pixel_x]}')
+    print(f'Noise: {noise[pixel_y, pixel_x]}')
+    img_norm = np.linalg.norm(clean_img)
+    noise_norm = np.linalg.norm(noise)
+    # print("Clean Image Min/Max:", clean_img.min(), clean_img.max())
+    # print("Noisy Image Min/Max:", noisy_img.min(), noisy_img.max())
+    # print("Noise Min/Max:", noise.min(), noise.max())
 
     
     # Plot the clean image

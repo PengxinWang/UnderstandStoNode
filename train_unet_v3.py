@@ -27,7 +27,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, perceptual_ck_path, perceptual_layers, 
                                  train=True, val=True,
                                  download=download,
                                  batch_size=batch_size,
-                                 train_unet=0.8)
+                                 train_unet_ratio=0.6)
     
     bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=1).to(device)
     det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=2).to(device)
@@ -75,22 +75,23 @@ def train_unet(unet_ck_dir, bnn_ck_path, perceptual_ck_path, perceptual_layers, 
                 pbar.update()
         
         unet.eval()
-        with tqdm(total=len(valloader), desc=f'Epoch {epoch}/{n_epochs}') as pbar:
-            for batch_id, (imgs, _) in enumerate(valloader):
-                imgs = imgs.to(device)
-                noisy_imgs = unet(imgs)
-                bnn_pred = bnn_model(imgs).mean(dim=1).exp()
-                det_pred = det_model(noisy_imgs).mean(dim=1).exp()
-                ce_loss_val = cross_entropy(det_pred, bnn_pred)
-                perceptual_loss_val = percep_loss(noisy_imgs, imgs)
-                loss_val = ce_loss_val + anta * perceptual_loss_val
+        with torch.no_grad():
+            with tqdm(total=len(valloader), desc=f'Epoch {epoch}/{n_epochs}') as pbar:
+                for batch_id, (imgs, _) in enumerate(valloader):
+                    imgs = imgs.to(device)
+                    noisy_imgs = unet(imgs)
+                    bnn_pred = bnn_model(imgs).mean(dim=1).exp()
+                    det_pred = det_model(noisy_imgs).mean(dim=1).exp()
+                    ce_loss_val = cross_entropy(det_pred, bnn_pred)
+                    perceptual_loss_val = percep_loss(noisy_imgs, imgs)
+                    loss_val = ce_loss_val + anta * perceptual_loss_val
 
-                epoch_loss_val += loss_val.item()
-                epoch_ce_loss_val += ce_loss_val.item()
-                epoch_perceptual_loss_val += perceptual_loss_val.item()
+                    epoch_loss_val += loss_val.item()
+                    epoch_ce_loss_val += ce_loss_val.item()
+                    epoch_perceptual_loss_val += perceptual_loss_val.item()
 
-                pbar.set_postfix({'ce_loss_val': f'{ce_loss_val:.4f}', 'perceptual_loss_val':f'{perceptual_loss_val:4f}', 'loss_val': f'{epoch_loss_val/(1+batch_id):.4f}'})
-                pbar.update()
+                    pbar.set_postfix({'ce_loss_val': f'{ce_loss_val:.4f}', 'perceptual_loss_val':f'{perceptual_loss_val:4f}', 'loss_val': f'{epoch_loss_val/(1+batch_id):.4f}'})
+                    pbar.update()
 
         writer.add_scalars('Loss', {'train': epoch_loss/len(trainloader), 'val': epoch_loss_val/len(valloader)}, epoch)
         writer.add_scalars('ce loss', {'train': epoch_ce_loss/len(trainloader), 'val': epoch_ce_loss_val/len(valloader)}, epoch)
@@ -106,7 +107,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, perceptual_ck_path, perceptual_layers, 
     log.info('Training Done')
     writer.close()
 
-@hydra.main(config_path='conf_unet', config_name='train_config_v2')
+@hydra.main(config_path='conf_unet', config_name='train_config_v3')
 def main(cfg: DictConfig):
     experiment_name = cfg.experiment.name
     seed = cfg.experiment.seed
