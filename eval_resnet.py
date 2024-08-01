@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 
 log = logging.getLogger(__name__)
 
-def eval(model, dataset, data_dir, device, test_bsize=512, download=False, intensity=0, ece_bins=15):
+def eval(model, dataset, data_dir, device, test_bsize=512, intensity=0, ece_bins=15):
     """
     Evaluates the performance of the given model on the provided test data.
 
@@ -31,7 +31,6 @@ def eval(model, dataset, data_dir, device, test_bsize=512, download=False, inten
     testloader = get_dataloader(data_dir=data_dir, dataset=dataset,
                                 batch_size=test_bsize,
                                 train=False,
-                                download=download,
                                 intensity=intensity)
     
     ece_eval = ECE(n_bins=ece_bins) 
@@ -63,7 +62,7 @@ def eval(model, dataset, data_dir, device, test_bsize=512, download=False, inten
     ece = ece_eval(pred_total, labels_total) # the input of ece_eval should be probability
     return acc, ece, nll
 
-@hydra.main(config_path='conf_resnet18', config_name='eval_v0_config')
+@hydra.main(config_path='conf_resnet18', config_name='eval_v1_config')
 def main(cfg: DictConfig):
 
     dataset_name = cfg.dataset.name
@@ -71,7 +70,6 @@ def main(cfg: DictConfig):
     datadir_corrupted = to_absolute_path(cfg.dataset.dir_corrupted)
     n_classes = cfg.dataset.n_classes
     in_channel = cfg.dataset.in_channel
-    download = cfg.dataset.download
 
     experiment_name = cfg.experiment.name
     res_dir = to_absolute_path(cfg.experiment.res_dir)
@@ -119,7 +117,6 @@ def main(cfg: DictConfig):
                                                dataset=dataset_name,
                                                data_dir=datadir_clean,
                                                test_bsize=test_bsize,
-                                               download=download,
                                                device=device,
                                                ece_bins=ece_bins)
         
@@ -142,7 +139,6 @@ def main(cfg: DictConfig):
                                                                dataset=f'{dataset_name}-C',
                                                                data_dir=datadir_corrupted,
                                                                test_bsize=test_bsize,
-                                                               download=download,
                                                                intensity=intensity,
                                                                device=device,
                                                                ece_bins=ece_bins)

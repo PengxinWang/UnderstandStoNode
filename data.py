@@ -1,5 +1,3 @@
-import os
-import numpy as np
 import torchvision
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
@@ -7,7 +5,6 @@ from utils import Augmented_Dataset, CorruptDataset
     
 def get_dataloader(data_dir,
                    dataset='CIFAR10',
-                   download=False,
                    batch_size=64,
                    geo_aug=False,
                    train=True,
@@ -35,10 +32,10 @@ def get_dataloader(data_dir,
 
     if dataset in ('CIFAR10', 'TinyImageNet'):
         if train_unet_ratio is None:
-            trainset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=download, transform=train_transform)
-            testset = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=download, transform=base_transform)
+            trainset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True, transform=train_transform)
+            testset = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True, transform=base_transform)
         else:
-            dataset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=download, transform=train_transform)
+            dataset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True, transform=train_transform)
             train_size = int(len(dataset)*train_unet_ratio) 
             trainset, _ = random_split(dataset, [train_size, len(dataset)-train_size]) 
 
@@ -70,20 +67,20 @@ def get_dataloader(data_dir,
         testloader = DataLoader(testset, batch_size=batch_size, shuffle=False)
         return testloader
 
-def get_id_label_dict(dataset='CIFAR10'):
-    """
-    Get dictionaries for ID to label and label to ID mappings for a given dataset.
-    Args:
-        dataset (str): Name of the dataset.
-    Returns:
-        tuple: id_to_label dict and label_to_id dict.
-    Example:
-        id_to_label, label_to_id = get_id_label_dict('FashionMNIST')
-    """
-    if dataset in ('CIFAR10', 'CIFAR10-C'):
-        raise NotImplementedError
-    else:
-        raise ValueError(f'dataset {dataset} not supported')
-    id_to_label = {id: label for (id,label) in enumerate(labels)}
-    label_to_id = {label: id for (id,label) in enumerate(labels)}
-    return id_to_label, label_to_id
+# def get_id_label_dict(dataset='CIFAR10'):
+#     """
+#     Get dictionaries for ID to label and label to ID mappings for a given dataset.
+#     Args:
+#         dataset (str): Name of the dataset.
+#     Returns:
+#         tuple: id_to_label dict and label_to_id dict.
+#     Example:
+#         id_to_label, label_to_id = get_id_label_dict('FashionMNIST')
+#     """
+#     if dataset in ('CIFAR10', 'CIFAR10-C'):
+#         raise NotImplementedError
+#     else:
+#         raise ValueError(f'dataset {dataset} not supported')
+#     id_to_label = {id: label for (id,label) in enumerate(labels)}
+#     label_to_id = {label: id for (id,label) in enumerate(labels)}
+#     return id_to_label, label_to_id

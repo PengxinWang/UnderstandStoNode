@@ -8,20 +8,28 @@ unet:
   ck_dir: "./checkpoints/unet"
 
 experiment:
-  name: "train unet for noise generation"
+  name: "train unet with perceptual loss for more versatile noise generation"
   seed: 42
-  log_dir: ".../logs/train"
+  log_dir: ".../logs"
+
+perceptual:
+  ck_dir: "./checkpoints/resnet18_v0"
+  epoch: 100
+  input_weight_initial: 0.
+  input_weight_final: 0.3
+  intermediate_weight: 0.025
+  prediction_weight: 0.6
+  perceptual_layers: [2, 4, 6, 8]
 
 params:
   n_epochs: 100
   batch_size: 128
   lr: 1e-2
-  anta: 1
-  weight_decay: 5e-4
+  anta: 0.4
+  weight_decay: 5e-4  
 
 dataset:
   name: CIFAR10
   dir: ./data/CIFAR10
   in_channels: 3
   n_classes: 10
-  download: False

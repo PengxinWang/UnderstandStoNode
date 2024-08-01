@@ -20,27 +20,9 @@ warnings.filterwarnings("ignore")
 log = logging.getLogger(__name__)
 
 def train(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_epoch, 
-          lr, batch_size, weight_decay, geo_aug, download):
+          lr, batch_size, weight_decay, geo_aug):
     """
     Trains the specified model on the given dataset and logs the training process.
-
-    Args:
-        model (str): The model architecture to use (e.g., 'resnet18').
-        dataset (str): The dataset to use for training and validation.
-        log_dir (str): Directory where TensorBoard logs will be saved.
-        experiment_name (str): Name of the current experiment for logging.
-        data_dir (str): Directory where the dataset is stored.
-        n_classes (int): Number of classes in the dataset.
-        in_channel (int): Number of input channels for the model.
-        ck_dir (str): Directory where model checkpoints will be saved.
-        n_epoch (int): Number of epochs to train the model.
-        lr (float): Learning rate for the optimizer.
-        batch_size (int): Batch size for the DataLoader.
-        weight_decay (float): Weight decay (L2 regularization) for the optimizer.
-        geo_aug (bool): Whether to apply geometrical augmentations to the training data.
-
-    Returns:
-        None
     """
     writer = SummaryWriter(log_dir=log_dir)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -49,8 +31,7 @@ def train(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_ep
     trainloader, valloader = get_dataloader(data_dir=data_dir, dataset=dataset,
                                             batch_size=batch_size,
                                             train=True, val=True,
-                                            geo_aug=geo_aug,
-                                            download=download)
+                                            geo_aug=geo_aug,)
 
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     criterion = nn.NLLLoss()
@@ -117,7 +98,6 @@ def main(cfg: DictConfig):
     datadir = to_absolute_path(cfg.dataset.dir)
     n_classes = cfg.dataset.n_classes
     in_channel = cfg.dataset.in_channel
-    download = cfg.dataset.download
 
     batch_size = cfg.params.batch_size
     lr = cfg.params.lr
@@ -157,8 +137,7 @@ def main(cfg: DictConfig):
           lr=lr,
           batch_size=batch_size,
           weight_decay=weight_decay,
-          geo_aug=geo_aug,
-          download=download)
+          geo_aug=geo_aug,)
 
 if __name__ == "__main__":    
     main()

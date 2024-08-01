@@ -2,8 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Load the image data from the .npy file
-clean_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug_v3/imgs.npy'
-noisy_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug_v3/noisy_imgs.npy'
+clean_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug/imgs.npy'
+noisy_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug/noisy_imgs.npy'
 clean_imgs = np.load(clean_imgs_path).squeeze().astype(np.float32)/255
 noisy_imgs = np.load(noisy_imgs_path).squeeze().astype(np.float32)/255
 

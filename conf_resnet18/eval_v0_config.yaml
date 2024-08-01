@@ -19,4 +19,3 @@ dataset:
   dir_corrupted: ./data/CIFAR10-C
   in_channel: 3
   n_classes: 10
-  download: False

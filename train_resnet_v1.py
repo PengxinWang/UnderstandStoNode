@@ -22,24 +22,6 @@ def train(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_ep
           lr, batch_size, weight_decay, geo_aug):
     """
     Trains the specified model on the given dataset and logs the training process.
-
-    Args:
-        model (str): The model architecture to use (e.g., 'resnet18').
-        dataset (str): The dataset to use for training and validation.
-        log_dir (str): Directory where TensorBoard logs will be saved.
-        experiment_name (str): Name of the current experiment for logging.
-        data_dir (str): Directory where the dataset is stored.
-        n_classes (int): Number of classes in the dataset.
-        in_channel (int): Number of input channels for the model.
-        ck_dir (str): Directory where model checkpoints will be saved.
-        n_epoch (int): Number of epochs to train the model.
-        lr (float): Learning rate for the optimizer.
-        batch_size (int): Batch size for the DataLoader.
-        weight_decay (float): Weight decay (L2 regularization) for the optimizer.
-        geo_aug (bool): Whether to apply geometrical augmentations to the training data.
-
-    Returns:
-        None
     """
     writer = SummaryWriter(log_dir=log_dir)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -100,7 +82,7 @@ def train(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_ep
     log.info('Training Done')
     writer.close()
 
-@hydra.main(config_path='conf_resnet18', config_name='train_v3_config')
+@hydra.main(config_path='conf_resnet18', config_name='train_v1_config')
 def main(cfg: DictConfig):
     experiment_name = cfg.experiment.name
     log_dir = cfg.experiment.log_dir

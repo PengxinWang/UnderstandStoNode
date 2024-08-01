@@ -31,4 +31,3 @@ dataset:
   dir: ./data/CIFAR10
   in_channel: 3
   n_classes: 10
-  download: False

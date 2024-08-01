@@ -2,11 +2,10 @@ import torch
 
 from model import *
 from data import get_dataloader
-from utils import cross_entropy, unnormalize
+from utils import unnormalize
 
 import os
 import numpy as np
-from tqdm import tqdm
 
 import hydra
 import logging
@@ -18,13 +17,12 @@ warnings.filterwarnings("ignore")
 
 log = logging.getLogger(__name__)
 
-def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, downlaod, batch_size):
+def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, batch_size):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     trainloader = get_dataloader(data_dir=input_dir,
                                  train=True, val=False,
-                                 batch_size=batch_size,
-                                 download=downlaod)
+                                 batch_size=batch_size,)
 
     imgs_clean = []
     labels_clean = []
@@ -63,7 +61,7 @@ def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, downlaod, bat
     np.save(os.path.join(save_dir, f'labels.npy'), labels_clean_numpy)
 
 
-@hydra.main(config_path='conf_generate_noise', config_name='generate_noise_v3_config')
+@hydra.main(config_path='conf_generate_noise', config_name='generate_noise_config')
 def main(cfg: DictConfig):
     experiment_name = cfg.experiment.name
     seed = cfg.experiment.seed
@@ -74,7 +72,6 @@ def main(cfg: DictConfig):
     save_dir = to_absolute_path(cfg.dataset.save_dir)
     n_classes = cfg.dataset.n_classes
     in_channels = cfg.dataset.in_channels
-    download = cfg.dataset.download
 
     unet_ck_dir = to_absolute_path(cfg.unet.ck_dir)
     unet_epoch = cfg.unet.epoch
@@ -94,7 +91,6 @@ def main(cfg: DictConfig):
     log.info(f'  -Save Directory: {save_dir}')
     log.info(f'  -Number of Classes: {n_classes}')
     log.info(f'  -Number of Input Channels: {in_channels}')
-    log.info(f'  -Download: {download}')
 
     log.info(f'Unet:')
     log.info(f'  -Unet Checkpoint Path: {unet_ck_path}')
@@ -102,7 +98,7 @@ def main(cfg: DictConfig):
     log.info(f'Params:')
     log.info(f'  -Batch Size: {batch_size}')
 
-    generate_noise(input_dir=input_dir, save_dir=save_dir, unet_ck_path=unet_ck_path, in_channels=in_channels, downlaod=download, batch_size=batch_size)
+    generate_noise(input_dir=input_dir, save_dir=save_dir, unet_ck_path=unet_ck_path, in_channels=in_channels, batch_size=batch_size)
 
 if __name__ == '__main__':
     main()
