@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 
 log = logging.getLogger(__name__)
 
-def eval(model, dataset, data_dir, device, test_bsize=512, download=False, intensity=0):
+def eval(model, dataset, data_dir, device, test_bsize=512, download=False, intensity=0, ece_bins=15):
     """
     Evaluates the performance of the given model on the provided test data.
 
@@ -34,7 +34,7 @@ def eval(model, dataset, data_dir, device, test_bsize=512, download=False, inten
                                 download=download,
                                 intensity=intensity)
     
-    ece_eval = ECE(n_bins=15) 
+    ece_eval = ECE(n_bins=ece_bins) 
     pred_total = []
     labels_total = []
     correct_count = 0
@@ -82,6 +82,7 @@ def main(cfg: DictConfig):
 
     n_epochs = cfg.params.n_epoch
     test_bsize = cfg.params.batch_size
+    ece_bins = cfg.params.ece_bins
     os.makedirs(ck_dir, exist_ok=True)
     os.makedirs(res_dir, exist_ok=True)
 
@@ -98,7 +99,7 @@ def main(cfg: DictConfig):
     log.info(f'Model: {model_name}')
     log.info(f'  - ck_dir: {cfg.model.ck_dir}')
 
-    log.info(f'Testing with batch size: {test_bsize}, epochs: {n_epochs}')
+    log.info(f'Testing with batch size: {test_bsize}, epochs: {n_epochs}, ece_bins: {ece_bins}')
     
     torch.manual_seed(seed)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -119,7 +120,8 @@ def main(cfg: DictConfig):
                                                data_dir=datadir_clean,
                                                test_bsize=test_bsize,
                                                download=download,
-                                               device=device)
+                                               device=device,
+                                               ece_bins=ece_bins)
         
         accuracies[0].append(acc_clean)
         eces[0].append(ece_clean)
@@ -142,7 +144,8 @@ def main(cfg: DictConfig):
                                                                test_bsize=test_bsize,
                                                                download=download,
                                                                intensity=intensity,
-                                                               device=device)
+                                                               device=device,
+                                                               ece_bins=ece_bins)
             accuracies[intensity].append(acc_corrupted)
             eces[intensity].append(ece_corrupted)
             nlls[intensity].append(nll_corrupted)
