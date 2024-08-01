@@ -39,35 +39,39 @@ def process_data(results):
     return processed_data
 
 def plot_results(processed_data):
+    markers = ['o', 's', '^', '*']
     plt.figure(figsize=(18, 6))
-    
+
     # Plot Accuracy
     plt.subplot(1, 3, 1)
-    for model_name, data in processed_data.items():
-        plt.plot(data['intensities'], data['accuracies'], marker='o', label=model_name)
+    for idx, (model_name, data) in enumerate(processed_data.items()):
+        marker = markers[idx]
+        plt.plot(data['intensities'], data['accuracies'], marker=marker, label=model_name)
     plt.xlabel('Corruption Intensity')
     plt.ylabel('Accuracy')
-    plt.title('Accuracy vs. Corruption Intensity')
+    plt.title('Accuracy (up)')
     plt.legend()
     plt.grid(True)
 
     # Plot ECE
     plt.subplot(1, 3, 2)
-    for model_name, data in processed_data.items():
-        plt.plot(data['intensities'], data['eces'], marker='o', label=model_name)
+    for idx, (model_name, data) in enumerate(processed_data.items()):
+        marker = markers[idx]
+        plt.plot(data['intensities'], data['eces'], marker=marker, label=model_name)
     plt.xlabel('Corruption Intensity')
     plt.ylabel('ECE')
-    plt.title('ECE vs. Corruption Intensity')
+    plt.title('ECE (down)')
     plt.legend()
     plt.grid(True)
 
     # Plot NLL
     plt.subplot(1, 3, 3)
-    for model_name, data in processed_data.items():
-        plt.plot(data['intensities'], data['nlls'], marker='o', label=model_name)
+    for idx, (model_name, data) in enumerate(processed_data.items()):
+        marker = markers[idx]
+        plt.plot(data['intensities'], data['nlls'], marker=marker, label=model_name)
     plt.xlabel('Corruption Intensity')
     plt.ylabel('NLL')
-    plt.title('NLL vs. Corruption Intensity')
+    plt.title('NLL (down)')
     plt.legend()
     plt.grid(True)
 

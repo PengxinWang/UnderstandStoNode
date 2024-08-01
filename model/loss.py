@@ -26,7 +26,7 @@ class ModelFeatures(nn.Module):
             x = self.avgpool(x)
             x = torch.flatten(x, 1)
             fc_out = self.fc(x)
-            pred = fc_out.exp()
+            pred = F.softmax(fc_out, dim=-1)
             # pred: probability vector
             features.append((f'output layer', pred))
         return features
@@ -44,9 +44,9 @@ class PerceptualLoss(nn.Module):
         input_features = self.model_features(input_imgs)
         
         loss = 0.
-        for in_f, o_f in zip(output_features, input_features):
+        for o_f, in_f in zip(output_features, input_features):
             if in_f[0] == 'output layer':
-                loss += self.prediction_weight * cross_entropy(input=in_f[1], target=o_f[1])
+                loss += self.prediction_weight * cross_entropy(input=o_f[1], target=in_f[1])
             elif in_f[0] == 'input layer':
                 loss += self.input_weight * F.mse_loss(in_f[1], o_f[1])
             else:
