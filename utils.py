@@ -1,8 +1,12 @@
 import os
+import glob
+from PIL import Image
 import numpy as np
 import torch
 import torch.nn as nn
+import torch.utils
 from torch.utils.data import Dataset
+import torch.utils.data
 
 # Data
 def unnormalize(tensor):
@@ -53,6 +57,84 @@ class CorruptDataset(torch.utils.data.Dataset):
     def __getitem__(self, idx):
         img = self.imgs[idx]
         label = torch.tensor(self.labels[idx]).long()
+        if self.transform:
+            img = self.transform(img)
+        return img, label
+
+class TinyImageNetDataset(torch.utils.data.Dataset):
+    """
+    create customed dataset for TinyImageNet dataset
+    """
+    def __init__(self, data_dir, transform=None, train=True):
+        self.id_dict = {}
+        with open(os.path.join(data_dir, 'wnids.txt'), 'r') as f:
+            for i, line in enumerate(f):
+                self.id_dict[line.strip()] = i
+
+        self.train = train
+        self.transform = transform
+        if train:
+            self.filenames = glob.glob(os.path.join(data_dir, 'train/*/images/*.JPEG'))
+            self.labels = [self.id_dict[os.path.basename(os.path.dirname(os.path.dirname(fp)))] 
+                           for fp in self.filenames]
+        else:
+            val_images_dir = os.path.join(data_dir, 'val/images')
+            self.filenames = glob.glob(os.path.join(data_dir, '/val/images/*.JPEG'))
+            self.labels = []
+            val_annotations_file = os.path.join(data_dir, 'val/val_annotations.txt')
+            with open(val_annotations_file, 'r') as f:
+                for line in f.readlines():
+                    parts = line.strip().split('\t')
+                    img_name, wnid = parts[0], parts[1]
+                    if os.path.join(val_images_dir, img_name) in self.filenames:
+                        self.labels.append(self.id_dict[wnid])
+        
+    def __len__(self):
+        return len(self.filenames)
+        
+    def __getitem__(self, idx):
+        img = Image.open(self.filenames[idx]).convert('RGB')
+        label = self.labels[idx]
+        if self.transform:
+            img = self.transform(img)
+        return img, label
+
+class CorruptTinyImageNetDataset(torch.utils.data.Dataset):
+    """
+    create customed dataset for corrupted TinyImageNet dataset
+    """
+    def __init__(self, data_dir, corrupt_types, intensity, transform=None):
+        self.data_dir = data_dir
+        self.transform = transform
+        self.filenames = []
+        self.labels = []
+        self.corruption_types = corrupt_types
+
+        for corrupt_type in corrupt_types:
+            corrupt_dir = os.path.join(data_dir, corrupt_type, str(intensity))
+            class_dirs = [d for d in os.listdir(corrupt_dir) if os.path.isdir(os.path.join(corrupt_dir, d))]
+            for class_dir in class_dirs:
+                class_idx = self.get_class_index(class_dir)
+                if class_idx is not None:
+                    image_paths = glob.glob(os.path.join(corrupt_dir, class_dir, '*.JPEG'))
+                    self.filenames.extend(image_paths)
+                    self.labels.extend([class_idx] * len(image_paths))
+
+    def get_class_index(self, class_dir):
+        wnids_path = os.path.join(os.path.dirname(self.data_dir), 'wnids.txt')
+        with open(wnids_path, 'r') as f:
+            wnids = [line.strip() for line in f]
+        if class_dir in wnids:
+            return wnids.index(class_dir)
+        return None
+
+    def __len__(self):
+        return len(self.filenames)
+        
+    def __getitem__(self, idx):
+        print(f'check running {idx}')
+        img = Image.open(self.filenames[idx]).convert('RGB')
+        label = self.labels[idx]
         if self.transform:
             img = self.transform(img)
         return img, label

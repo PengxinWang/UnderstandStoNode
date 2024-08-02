@@ -82,7 +82,7 @@ def train(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_ep
     log.info('Training Done')
     writer.close()
 
-@hydra.main(config_path='conf_resnet18', config_name='train_v1_config')
+@hydra.main(config_path='conf_resnet18', config_name='train_v2_config')
 def main(cfg: DictConfig):
     experiment_name = cfg.experiment.name
     log_dir = cfg.experiment.log_dir

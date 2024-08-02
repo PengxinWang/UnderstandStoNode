@@ -15,7 +15,7 @@ params:
   aug_type: "full"
 
 dataset:
-  name: CIFAR10-bnnaug
-  dir: ./data/CIFAR10-aug
+  name: CIFAR10
+  dir: ./data/CIFAR10
   in_channel: 3
   n_classes: 10

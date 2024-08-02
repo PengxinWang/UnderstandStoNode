@@ -2,7 +2,7 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
-from utils import Augmented_Dataset, CorruptDataset
+from utils import Augmented_Dataset, CorruptDataset, TinyImageNetDataset, CorruptTinyImageNetDataset
     
 def get_dataloader(data_dir,
                    dataset='CIFAR10',
@@ -43,7 +43,7 @@ def get_dataloader(data_dir,
     else:
         train_transform = base_transform
 
-    if dataset in ('CIFAR10', 'TinyImageNet'):
+    if dataset == 'CIFAR10':
         if train_unet_ratio is None:
             trainset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True, transform=train_transform)
             testset = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True, transform=base_transform)
@@ -52,15 +52,31 @@ def get_dataloader(data_dir,
             train_size = int(len(dataset)*train_unet_ratio) 
             trainset, _ = random_split(dataset, [train_size, len(dataset)-train_size]) 
 
-    elif dataset in ('CIFAR10-bnnaug', 'TinyImageNet-bnnaug'):
-        trainset = Augmented_Dataset(data_dir=data_dir, transform=train_transform)
+    elif dataset == 'TinyImageNet':
+        if train_unet_ratio is None:
+            trainset = TinyImageNetDataset(data_dir=data_dir, train=True, transform=train_transform)
+            testset = TinyImageNetDataset(data_dir=data_dir, train=False, transform=base_transform)
+        else:
+            dataset = TinyImageNetDataset(root=data_dir, train=True, transform=train_transform)
+            train_size = int(len(dataset)*train_unet_ratio) 
+            trainset, _ = random_split(dataset, [train_size, len(dataset)-train_size]) 
 
-    elif dataset in ('CIFAR10-C', 'TinyImageNet-C'):
+    elif dataset == 'CIFAR10-C':
         corrupt_types = ['saturate', 'shot_noise', 'gaussian_noise', 'zoom_blur', 'glass_blur', 'brightness', 'contrast', 'motion_blur', 'pixelate', 'snow', 'speckle_noise', 'spatter', 'gaussian_blur', 'frost', 'defocus_blur',
                         'elastic_transform', 'impulse_noise', 'jpeg_compression', 'fog']
         if intensity == 0:
             raise ValueError(f'need to indicate intensity(from 1 to 5) for corrupted dataset')
         testset = CorruptDataset(data_dir, corrupt_types=corrupt_types, intensity=intensity, transform=base_transform)
+
+    elif dataset == 'TinyImageNet-C':
+        corrupt_types = ['saturate', 'shot_noise', 'gaussian_noise', 'zoom_blur', 'glass_blur', 'brightness', 'contrast', 'motion_blur', 'pixelate', 'snow', 'speckle_noise', 'spatter', 'gaussian_blur', 'frost', 'defocus_blur',
+                        'elastic_transform', 'impulse_noise', 'jpeg_compression', 'fog']
+        if intensity == 0:
+            raise ValueError(f'need to indicate intensity(from 1 to 5) for corrupted dataset')
+        testset = CorruptTinyImageNetDataset(data_dir, corrupt_types=corrupt_types, intensity=intensity, transform=base_transform)
+
+    elif dataset in ('CIFAR10-bnnaug', 'TinyImageNet-bnnaug'):
+        trainset = Augmented_Dataset(data_dir=data_dir, transform=train_transform)
 
     else:
         raise(ValueError(f'Dataset not supported'))
@@ -70,14 +86,14 @@ def get_dataloader(data_dir,
             val_size = int(len(trainset) * val_ratio)
             train_size = len(trainset) - val_size
             trainset, valset = random_split(trainset, [train_size, val_size])
-            trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
-            valloader = DataLoader(valset, batch_size=batch_size, shuffle=False)
+            trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4)
+            valloader = DataLoader(valset, batch_size=batch_size, shuffle=False, num_workers=4)
             return trainloader, valloader
         else:
-            trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True)
+            trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4)
             return trainloader
     else:
-        testloader = DataLoader(testset, batch_size=batch_size, shuffle=False)
+        testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=4)
         return testloader
 
 # def get_id_label_dict(dataset='CIFAR10'):
