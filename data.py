@@ -1,3 +1,4 @@
+import torch
 import torchvision
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
@@ -6,7 +7,7 @@ from utils import Augmented_Dataset, CorruptDataset
 def get_dataloader(data_dir,
                    dataset='CIFAR10',
                    batch_size=64,
-                   geo_aug=False,
+                   aug_type=None,
                    train=True,
                    val=False,
                    val_ratio=0.2,
@@ -20,12 +21,24 @@ def get_dataloader(data_dir,
     """
     base_transform = transforms.Compose([transforms.ToTensor()])
         
-    if geo_aug:
+    if aug_type == 'geo':
         train_transform = transforms.Compose([
                 transforms.ToTensor(),
                 transforms.RandomHorizontalFlip(0.05),
                 transforms.RandomVerticalFlip(0.05),
                 transforms.RandomAffine(translate=(0.05, 0.05), scale=(0.95, 1.15), degrees=5, shear=5),
+                ])
+    elif aug_type == 'full':
+        train_transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.RandomHorizontalFlip(0.05),
+                transforms.RandomVerticalFlip(0.05),
+                transforms.RandomAffine(degrees=5, translate=(0.05, 0.05), scale=(0.95, 1.15), shear=5),
+                transforms.ColorJitter(brightness=0.1, contrast=0.1, saturation=0.1, hue=0.1),
+                transforms.RandomApply([transforms.GaussianBlur(kernel_size=3)], p=0.1),
+                transforms.RandomApply([transforms.Lambda(lambda x: x + 0.05 * torch.randn_like(x))], p=0.1),
+                transforms.RandomRotation(10),
+                transforms.RandomResizedCrop(size=(32, 32), scale=(0.8, 1.0)), 
                 ])
     else:
         train_transform = base_transform

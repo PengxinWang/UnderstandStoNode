@@ -13,18 +13,18 @@ params:
   n_epoch: 200
   batch_size: 128
   lr: 0.01
-  geo_aug: True
+  aug_type: "geo"
   milestones: [0.5, 0.9]
   final_factor: 0.3
   weight_decay: 0.0
-  entropy_weight: 1.0
+  entropy_weight: 0.4
   n_sample: 1
   kl_min: 0.05
   kl_max: 1
   prior_mean: 1.0
-  prior_std: 0.40
+  prior_std: 0.64
   post_mean_init: [1.0, 0.02]
-  post_std_init: [0.40, 0.05]
+  post_std_init: [0.64, 0.05]
 
 dataset:
   name: CIFAR10

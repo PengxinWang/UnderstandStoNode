@@ -1,9 +1,9 @@
 model:
   name: "resnet18"
-  ck_dir: "./checkpoints/resnet18_v1" 
+  ck_dir: "./checkpoints/resnet18_v2" 
 
 experiment:
-  name: "train resnet18 with bnn augmented dataset, version 1: unet with perceptual loss"
+  name: "train resnet18 with full data augmentation"
   seed: 42
   log_dir: ".../runs"
 
@@ -11,8 +11,8 @@ params:
   n_epoch: 200
   batch_size: 128
   lr: 1e-3
-  aug_type: "geo"
   weight_decay: 1e-3
+  aug_type: "full"
 
 dataset:
   name: CIFAR10-bnnaug

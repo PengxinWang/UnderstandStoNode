@@ -16,6 +16,7 @@ for i in range(4):
     noise = np.abs(noisy_img - clean_img)
     pixel_x, pixel_y = 0, 0
     img_norm = np.linalg.norm(clean_img)
+    noisy_img_norm = np.linalg.norm(noisy_img)
     noise_norm = np.linalg.norm(noise)
     print("Clean Image Min/Max:", clean_img.min(), clean_img.max())
     print("Noisy Image Min/Max:", noisy_img.min(), noisy_img.max())
@@ -24,12 +25,12 @@ for i in range(4):
     
     # Plot the clean image
     axes[i, 0].imshow(clean_img)
-    axes[i, 0].set_title(f'Clean Image {i+1}\nNorm: {img_norm :2f}')
+    axes[i, 0].set_title(f'Clean Image {i+1}\nNorm: {img_norm :.2f}')
     axes[i, 0].axis('off')
     
     # Plot the noisy image
     axes[i, 1].imshow(noisy_img)
-    axes[i, 1].set_title(f'Noisy Image {i+1}')
+    axes[i, 1].set_title(f'Noisy Image {i+1}\nNorm: {noisy_img_norm :.2f}')
     axes[i, 1].axis('off')
     
     # Plot the noise

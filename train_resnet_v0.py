@@ -5,7 +5,6 @@ import torch.optim as optim
 
 from tqdm import tqdm
 from data import get_dataloader
-import matplotlib.pyplot as plt
 
 import hydra
 import logging
@@ -20,7 +19,7 @@ warnings.filterwarnings("ignore")
 log = logging.getLogger(__name__)
 
 def train(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_epoch, 
-          lr, batch_size, weight_decay, geo_aug):
+          lr, batch_size, weight_decay, aug_type):
     """
     Trains the specified model on the given dataset and logs the training process.
     """
@@ -31,7 +30,7 @@ def train(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_ep
     trainloader, valloader = get_dataloader(data_dir=data_dir, dataset=dataset,
                                             batch_size=batch_size,
                                             train=True, val=True,
-                                            geo_aug=geo_aug,)
+                                            aug_type=aug_type)
 
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     criterion = nn.NLLLoss()
@@ -103,7 +102,7 @@ def main(cfg: DictConfig):
     lr = cfg.params.lr
     n_epoch = cfg.params.n_epoch
     weight_decay = cfg.params.weight_decay
-    geo_aug = cfg.params.geo_aug
+    aug_type = cfg.params.aug_type
 
     log.info(f'Experiment: {experiment_name}')
     log.info(f'Device: {device}')
@@ -122,7 +121,7 @@ def main(cfg: DictConfig):
     log.info(f'batch size: {batch_size}')
     log.info(f'learning rate: {lr}')
     log.info(f'epochs: {n_epoch}')
-    log.info(f'geometrical augmentation: {geo_aug}')
+    log.info(f'data augmentation: {aug_type}')
     log.info(f'weight decay: {weight_decay}')
 
     torch.manual_seed(seed)
@@ -137,7 +136,7 @@ def main(cfg: DictConfig):
           lr=lr,
           batch_size=batch_size,
           weight_decay=weight_decay,
-          geo_aug=geo_aug,)
+          aug_type=aug_type,)
 
 if __name__ == "__main__":    
     main()

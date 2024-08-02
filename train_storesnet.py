@@ -19,7 +19,7 @@ warnings.filterwarnings("ignore")
 log = logging.getLogger(__name__)
 
 def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_epoch, 
-          lr, batch_size, weight_decay, milestones, final_factor, geo_aug, n_component, n_sample, entropy_weight, kl_min, kl_max, prior_mean, prior_std, post_mean_init, post_std_init):
+          lr, batch_size, weight_decay, milestones, final_factor, aug_type, n_component, n_sample, entropy_weight, kl_min, kl_max, prior_mean, prior_std, post_mean_init, post_std_init):
     """
     Trains the specified model on the given dataset and logs the training process.
     """
@@ -31,7 +31,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
     trainloader, valloader = get_dataloader(data_dir=data_dir, dataset=dataset,
                                             batch_size=batch_size,
                                             train=True, val=True,
-                                            geo_aug=geo_aug)
+                                            aug_type=aug_type)
 
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: lr_schedule(epoch, n_epoch, milestones=milestones, final_factor=final_factor))
@@ -116,7 +116,7 @@ def main(cfg: DictConfig):
     final_factor = cfg.params.final_factor
     n_epoch = cfg.params.n_epoch
     weight_decay = cfg.params.weight_decay
-    geo_aug = cfg.params.geo_aug
+    aug_type = cfg.params.aug_type
     entropy_weight = cfg.params.entropy_weight
     n_sample = cfg.params.n_sample
     kl_min = cfg.params.kl_min
@@ -147,7 +147,7 @@ def main(cfg: DictConfig):
     log.info(f'  -final factor: {final_factor}')
     log.info(f'  -epochs: {n_epoch}')
 
-    log.info(f'  -geometrical augmentation: {geo_aug}')
+    log.info(f'  -data augmentation: {aug_type}')
     log.info(f'  -weight decay: {weight_decay}')
 
     log.info(f'  -entropy_weight: {entropy_weight}')
@@ -171,7 +171,7 @@ def main(cfg: DictConfig):
             final_factor=final_factor,
             batch_size=batch_size,
             weight_decay=weight_decay,
-            geo_aug=geo_aug,
+            aug_type=aug_type,
             n_component=n_component,
             n_sample=n_sample,
             kl_min=kl_min,
