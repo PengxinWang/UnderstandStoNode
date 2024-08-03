@@ -62,7 +62,7 @@ def eval(model, dataset, data_dir, device, test_bsize=512, intensity=0, ece_bins
     ece = ece_eval(pred_total, labels_total) # the input of ece_eval should be probability
     return acc, ece, nll
 
-@hydra.main(config_path='conf_resnet18', config_name='eval_v1_config')
+@hydra.main(config_path='conf_resnet18', config_name='eval_v2_config')
 def main(cfg: DictConfig):
 
     dataset_name = cfg.dataset.name

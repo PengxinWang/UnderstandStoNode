@@ -2,7 +2,7 @@ bnn:
   name: "storesnet18"
   ck_dir: "./checkpoints/storesnet18"
   epoch: 200 
-  n_components: 2
+  n_components: 4
 
 unet:
   ck_dir: "./checkpoints/unet"
@@ -12,20 +12,17 @@ experiment:
   seed: 42
   log_dir: ".../logs"
 
-perceptual:
-  ck_dir: "./checkpoints/resnet18_v0"
-  epoch: 100
+loss:
   input_weight_initial: 0.4
   input_weight_final: 0.3
   intermediate_weight: 0.025
   prediction_weight: 0.5
-  perceptual_layers: [2, 4, 6, 8]
+  intermediate_layers: [2, 4, 6, 8]
 
 params:
-  n_epochs: 100
+  n_epochs: 1
   batch_size: 128
   lr: 1e-2
-  anta: 0.7
   weight_decay: 5e-4  
 
 dataset:

@@ -93,7 +93,7 @@ def get_dataloader(data_dir,
             trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4)
             return trainloader
     else:
-        testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=4)
+        testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4)
         return testloader
 
 # def get_id_label_dict(dataset='CIFAR10'):
