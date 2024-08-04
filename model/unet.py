@@ -61,7 +61,7 @@ class UNet(nn.Module):
         dec1 = self.upconv1(dec2)
         if dec1.size() != enc1.size():
             dec1 = nn.functional.pad(dec1, [0, enc1.size(3) - dec1.size(3), 0, enc1.size(2) - dec1.size(2)])
-        dec1 = dec1+enc1
+        # dec1 = dec1+enc1
         dec1 = self.decoder1(dec1)
 
         output = torch.sigmoid(self.conv(dec1))

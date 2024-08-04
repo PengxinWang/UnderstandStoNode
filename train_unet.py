@@ -2,7 +2,7 @@ import torch
 
 from model import *
 from data import get_dataloader
-from utils import anneal_weight, cross_entropy
+from utils import anneal_weight
 import os
 from tqdm import tqdm
 
@@ -25,7 +25,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, input_weight_initial, input_wei
                                  train_unet_ratio=0.6)
     
     bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=1).to(device)
-    det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=2).to(device)
+    det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=0).to(device)
     
     model_dict = torch.load(bnn_ck_path)
     bnn_model.load_state_dict(model_dict)
@@ -46,7 +46,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, input_weight_initial, input_wei
         epoch_pred_loss_val = 0.
         epoch_input_loss_val = 0.
         input_weight = anneal_weight(epoch, initial_weight=input_weight_initial, final_weight=input_weight_final, last_epoch=int(n_epochs*2/3)+1)
-        ds_loss = DistributionShiftLoss(sto_model_features=sto_features, det_model_features=det_features, input_weight=input_weight, intermediate_weight=intermediate_weight, prediction_weight=prediction_weight)
+        ds_loss = DistributionShiftLoss(sto_model_features=sto_features, det_model_features=det_features)
 
         unet.train()
         with tqdm(total=len(trainloader), desc=f'Epoch {epoch}/{n_epochs}') as pbar:
@@ -54,7 +54,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, input_weight_initial, input_wei
                 imgs = imgs.to(device)
                 noisy_imgs = unet(imgs)
                 input_loss, intermediate_loss, pred_loss = ds_loss(noisy_imgs, imgs)
-                loss = input_loss + intermediate_loss + pred_loss
+                loss = input_weight * input_loss + intermediate_weight * intermediate_loss + prediction_weight * pred_loss
 
                 epoch_loss += loss.item()
                 epoch_pred_loss += pred_loss.item()

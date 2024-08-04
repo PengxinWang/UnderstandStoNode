@@ -11,7 +11,7 @@ experiment:
 params:
   n_epoch: [200]
   batch_size: 512
-  ece_bins: 15
+  ece_bins: 20
 
 dataset:
   name: CIFAR10

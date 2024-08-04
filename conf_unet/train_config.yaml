@@ -1,7 +1,7 @@
 bnn:
   name: "storesnet18"
   ck_dir: "./checkpoints/storesnet18"
-  epoch: 200 
+  epoch: 100
   n_components: 4
 
 unet:
@@ -13,14 +13,14 @@ experiment:
   log_dir: ".../logs"
 
 loss:
-  input_weight_initial: 0.4
-  input_weight_final: 0.3
+  input_weight_initial: 0.25
+  input_weight_final: 0.025
   intermediate_weight: 0.025
   prediction_weight: 0.5
   intermediate_layers: [2, 4, 6, 8]
 
 params:
-  n_epochs: 1
+  n_epochs: 30
   batch_size: 128
   lr: 1e-2
   weight_decay: 5e-4  

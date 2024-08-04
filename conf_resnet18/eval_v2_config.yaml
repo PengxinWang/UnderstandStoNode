@@ -9,9 +9,9 @@ experiment:
   res_dir: "./results/resnet18_v2"
 
 params:
-  n_epoch: [200]
+  n_epoch: [10, 20, 50, 100]
   batch_size: 512
-  ece_bins: 15
+  ece_bins: 20
   
 dataset:
   name: CIFAR10

@@ -8,10 +8,10 @@ experiment:
   log_dir: ".../logs"
 
 params:
-  n_epoch: 200
+  n_epoch: 100
   batch_size: 128
   lr: 1e-3
-  aug_type: "geo"
+  aug_type: None
   weight_decay: 1e-3
 
 dataset:

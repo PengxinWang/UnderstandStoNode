@@ -10,10 +10,10 @@ experiment:
   log_dir: ".../runs/train"
 
 params:
-  n_epoch: 200
+  n_epoch: 100
   batch_size: 128
   lr: 0.01
-  aug_type: "geo"
+  aug_type: None
   milestones: [0.5, 0.9]
   final_factor: 0.3
   weight_decay: 0.
@@ -21,10 +21,10 @@ params:
   n_sample: 1
   kl_min: 0.05
   kl_max: 1
-  prior_mean: 1.0
+  prior_mean: 0.8
   prior_std: 0.64
-  post_mean_init: [1.0, 0.15]
-  post_std_init: [0.64, 0.30]
+  post_mean_init: [1.0, 0.25]
+  post_std_init: [0.64, 0.50]
 
 dataset:
   name: CIFAR10
