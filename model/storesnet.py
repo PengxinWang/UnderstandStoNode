@@ -225,5 +225,5 @@ class StoResNet(StoModel):
         x = x.view(-1, n_sample, x.size(1))
         return x
     
-def StoResNet18(num_classes=10, in_channels=3, n_components=2, stochastic=1, prior_mean=1.0, prior_std=0.32, post_mean_init=[1.0, 0.05], post_std_init=[0.40, 0.02]):
+def StoResNet18(num_classes=10, in_channels=3, n_components=4, stochastic=1, prior_mean=1.0, prior_std=0.32, post_mean_init=[1.0, 0.05], post_std_init=[0.40, 0.02]):
     return StoResNet(StoBasicBlock, [2,2,2,2], num_classes=num_classes, in_channels=in_channels, n_components=n_components, stochastic=stochastic, prior_mean=prior_mean, prior_std=prior_std, post_mean_init=post_mean_init, post_std_init=post_std_init)

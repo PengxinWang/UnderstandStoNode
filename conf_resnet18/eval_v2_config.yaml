@@ -4,12 +4,12 @@ model:
   version: 2
 
 experiment:
-  name: "test resnet18 version 2 clean and corrupted dataset"
+  name: "test resnet18 (version 2) on bnn augmented dataset"
   seed: 42
   res_dir: "./results/resnet18_v2"
 
 params:
-  n_epoch: [10, 20, 50, 100]
+  n_epoch: [20, 100, 200]
   batch_size: 512
   ece_bins: 20
   

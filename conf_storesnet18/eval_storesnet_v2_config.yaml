@@ -2,11 +2,11 @@ model:
   name: "storesnet18"
   ck_dir: "./checkpoints/storesnet18" 
   n_components: 4
-  stochastic: 1
-  version: 1
+  stochastic: 2
+  version: 2
 
 experiment:
-  name: "test storesnet18 version 1: with sampling during inference"
+  name: "test storesnet18 version 2: without sampling during inference"
   seed: 42
   res_dir: "./results/storesnet18"
 

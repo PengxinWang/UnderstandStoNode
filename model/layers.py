@@ -2,7 +2,6 @@ import torch
 import torch.distributions as D
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.utils.data import Dataset
 
 class StoLayer(nn.Module):
     def sto_init(self, 

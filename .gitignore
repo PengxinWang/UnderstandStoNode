@@ -4,3 +4,4 @@ data/
 checkpoints/
 __pycache__/
 results/
+qualitative_results/

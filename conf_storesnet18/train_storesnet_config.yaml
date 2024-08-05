@@ -10,9 +10,9 @@ experiment:
   log_dir: ".../runs/train"
 
 params:
-  n_epoch: 100
+  n_epoch: 200
   batch_size: 128
-  lr: 0.01
+  lr: 0.001
   aug_type: None
   milestones: [0.5, 0.9]
   final_factor: 0.3

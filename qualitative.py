@@ -1,43 +1,46 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
-# Load the image data from the .npy file
+# Load the image data from the .npy files
 clean_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug/imgs.npy'
 noisy_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug/noisy_imgs.npy'
-clean_imgs = np.load(clean_imgs_path).squeeze().astype(np.float32)/255
-noisy_imgs = np.load(noisy_imgs_path).squeeze().astype(np.float32)/255
+labels_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug/labels.npy'
 
-# Set up the matplotlib figure and axis
-fig, axes = plt.subplots(4, 3, figsize=(12, 16))
+beginning_index = 10000
+clean_imgs = np.load(clean_imgs_path).squeeze().astype(np.float32) / 255
+noisy_imgs = np.load(noisy_imgs_path).squeeze().astype(np.float32) / 255
+labels = np.load(labels_path)
 
-for i in range(4):
-    clean_img = clean_imgs[i]
-    noisy_img = noisy_imgs[i]
+# CIFAR-10 class names
+CIFAR10_CLASSES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+
+# Create a directory to save the images if it doesn't exist
+output_dir = 'qualitative_results'
+os.makedirs(output_dir, exist_ok=True)
+
+# Set up the matplotlib figure with a grid of subplots
+fig, axs = plt.subplots(10, 3, figsize=(12, 40))
+
+for i in range(10):
+    clean_img = clean_imgs[i + beginning_index]
+    noisy_img = noisy_imgs[i + beginning_index]
     noise = np.abs(noisy_img - clean_img)
-    pixel_x, pixel_y = 0, 0
-    img_norm = np.linalg.norm(clean_img)
-    noisy_img_norm = np.linalg.norm(noisy_img)
-    noise_norm = np.linalg.norm(noise)
-    print("Clean Image Min/Max:", clean_img.min(), clean_img.max())
-    print("Noisy Image Min/Max:", noisy_img.min(), noisy_img.max())
-    print("Noise Min/Max:", noise.min(), noise.max())
+    label = CIFAR10_CLASSES[labels[i + beginning_index]]
 
-    
     # Plot the clean image
-    axes[i, 0].imshow(clean_img)
-    axes[i, 0].set_title(f'Clean Image {i+1}\nNorm: {img_norm :.2f}')
-    axes[i, 0].axis('off')
+    axs[i, 0].imshow(clean_img)
+    axs[i, 0].axis('off')
     
     # Plot the noisy image
-    axes[i, 1].imshow(noisy_img)
-    axes[i, 1].set_title(f'Noisy Image {i+1}\nNorm: {noisy_img_norm :.2f}')
-    axes[i, 1].axis('off')
+    axs[i, 1].imshow(noisy_img)
+    axs[i, 1].axis('off')
     
     # Plot the noise
-    axes[i, 2].imshow(noise)
-    axes[i, 2].set_title(f'Noise {i+1}\nNorm: {noise_norm:.2f}')
-    axes[i, 2].axis('off')
+    axs[i, 2].imshow(noise)
+    axs[i, 2].axis('off')
 
-# Adjust layout
+# Save the figure containing all the images
 plt.tight_layout()
+plt.savefig(os.path.join(output_dir, 'comparison_images.png'))
 plt.show()

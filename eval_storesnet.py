@@ -63,7 +63,7 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, ece_bins=15):
     ece = ece_eval(pred_total, labels_total)
     return acc, ece, nll
 
-@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_config')
+@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_v2_config')
 def main(cfg: DictConfig):
     dataset_name = cfg.dataset.name
     datadir_clean = to_absolute_path(cfg.dataset.dir_clean)
@@ -72,7 +72,7 @@ def main(cfg: DictConfig):
     in_channel = cfg.dataset.in_channel
 
     experiment_name = cfg.experiment.name
-    res_dir = to_absolute_path(cfg.experiment.res_dir)
+    res_dir = to_absolute_path(f'{cfg.experiment.res_dir}_v{cfg.model.version}')
     seed = cfg.experiment.seed
 
     ck_dir = to_absolute_path(cfg.model.ck_dir)
@@ -82,7 +82,7 @@ def main(cfg: DictConfig):
     os.makedirs(ck_dir, exist_ok=True)
     os.makedirs(res_dir, exist_ok=True)
 
-    model_name = cfg.model.name
+    model_name = f'{cfg.model.name}_v{cfg.model.version}'
     stochastic = cfg.model.stochastic
     n_components = cfg.model.n_components
 

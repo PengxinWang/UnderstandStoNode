@@ -1,9 +1,9 @@
 model:
   name: "resnet18"
-  ck_dir: "./checkpoints/resnet18_v2" 
+  ck_dir: "./checkpoints/resnet18_v1" 
 
 experiment:
-  name: "train resnet18 with full data augmentation"
+  name: "train resnet18 (version 1) with gaussian data augmentation"
   seed: 42
   log_dir: ".../runs"
 
@@ -12,7 +12,7 @@ params:
   batch_size: 128
   lr: 1e-3
   weight_decay: 1e-3
-  aug_type: "full"
+  aug_type: "gaussian"
 
 dataset:
   name: CIFAR10
