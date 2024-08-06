@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 
 log = logging.getLogger(__name__)
 
-def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, ece_bins=15):
+def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types=None, ece_bins=15):
     """
     Evaluates the performance of the given model on the provided test data.
 
@@ -32,7 +32,8 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, ece_bins=15):
     testloader = get_dataloader(data_dir=data_dir, dataset=dataset,
                                 batch_size=test_bsize,
                                 train=False,
-                                intensity=intensity)
+                                intensity=intensity,
+                                corrupt_types=corrupt_types)
     
     ece_eval = ECE(n_bins=ece_bins)
     pred_total = []
@@ -70,6 +71,7 @@ def main(cfg: DictConfig):
     datadir_corrupted = to_absolute_path(cfg.dataset.dir_corrupted)
     n_classes = cfg.dataset.n_classes
     in_channel = cfg.dataset.in_channel
+    corrupt_types = cfg.dataset.corrupt_types
 
     experiment_name = cfg.experiment.name
     res_dir = to_absolute_path(f'{cfg.experiment.res_dir}_v{cfg.model.version}')
@@ -95,6 +97,7 @@ def main(cfg: DictConfig):
     log.info(f'  - Corrupted data directory: {datadir_corrupted}')
     log.info(f'  - n_classes: {n_classes}')
     log.info(f'  - in_channel: {in_channel}')
+    log.info(f'  - corrupt_types: {corrupt_types}')
     
     log.info(f'Model: {model_name}')
     log.info(f'  - ck_dir: {ck_dir}')
@@ -143,7 +146,8 @@ def main(cfg: DictConfig):
                                                 data_dir=datadir_corrupted,
                                                 test_bsize=test_bsize,
                                                 intensity=intensity,
-                                                ece_bins=ece_bins)
+                                                ece_bins=ece_bins,
+                                                corrupt_types=corrupt_types)
             
             accuracies[intensity].append(acc_corrupted)
             eces[intensity].append(ece_corrupted)

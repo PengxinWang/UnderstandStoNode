@@ -12,12 +12,12 @@ experiment:
 params:
   n_epoch: 200
   batch_size: 128
-  lr: 0.001
+  lr: 1e-3
   aug_type: "geometric"
   milestones: [0.5, 0.9]
   final_factor: 0.3
   weight_decay: 0.
-  entropy_weight: 0.4
+  entropy_weight: 1.
   n_sample: 1
   kl_min: 0.05
   kl_max: 1
