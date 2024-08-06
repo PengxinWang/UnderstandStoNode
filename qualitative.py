@@ -3,9 +3,9 @@ import matplotlib.pyplot as plt
 import os
 
 # Load the image data from the .npy files
-clean_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug/imgs.npy'
-noisy_imgs_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug/noisy_imgs.npy'
-labels_path = '/u/48/wangp8/unix/Work/exp_cifar10/data/CIFAR10-aug/labels.npy'
+clean_imgs_path = './data/CIFAR10-aug/imgs.npy'
+noisy_imgs_path = './data/CIFAR10-aug/noisy_imgs.npy'
+labels_path = './data/CIFAR10-aug/labels.npy'
 
 beginning_index = 10000
 clean_imgs = np.load(clean_imgs_path).squeeze().astype(np.float32) / 255

@@ -1,6 +1,6 @@
 unet:
   ck_dir: "./checkpoints/unet"
-  epoch: 40
+  epoch: 50
 
 experiment:
   name: "generate noise and make new dataset"

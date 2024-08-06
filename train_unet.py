@@ -25,7 +25,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, inp
                                  train_unet_ratio=0.5)
     
     bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=1).to(device)
-    det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=2).to(device)
+    det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=0).to(device)
     
     model_dict = torch.load(bnn_ck_path)
     bnn_model.load_state_dict(model_dict)
