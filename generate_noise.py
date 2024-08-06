@@ -55,7 +55,7 @@ def main():
     save_dir = f'./data/CIFAR10-aug'
     in_channels = 3
     unet_ck_dir = f'./checkpoints/unet'
-    unet_epoch = 10
+    unet_epoch = 50
     batch_size = 512
     unet_ck_path = os.path.join(unet_ck_dir, f'unet_epoch{unet_epoch}.pt')
     os.makedirs(save_dir, exist_ok=True)
