@@ -20,9 +20,9 @@ output_dir = 'qualitative_results'
 os.makedirs(output_dir, exist_ok=True)
 
 # Set up the matplotlib figure with a grid of subplots
-fig, axs = plt.subplots(10, 3, figsize=(12, 40))
+fig, axs = plt.subplots(4, 3, figsize=(12, 40))
 
-for i in range(10):
+for i in range(4):
     clean_img = clean_imgs[i + beginning_index]
     noisy_img = noisy_imgs[i + beginning_index]
     noise = np.abs(noisy_img - clean_img)

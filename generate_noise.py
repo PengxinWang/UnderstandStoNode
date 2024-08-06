@@ -7,15 +7,8 @@ from utils import unnormalize
 import os
 import numpy as np
 
-import hydra
-import logging
-from hydra.utils import to_absolute_path
-from omegaconf import DictConfig
-
 import warnings
 warnings.filterwarnings("ignore")
-
-log = logging.getLogger(__name__)
 
 def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, batch_size):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -44,60 +37,31 @@ def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, batch_size):
 
     imgs_noisy = torch.cat(imgs_noisy, dim=0)
     imgs_noisy = unnormalize(imgs_noisy).permute(0,2,3,1)
-    labels_noisy =  torch.cat(labels_noisy, dim=0)
-    log.info(f'Noisy Dataset shape: {imgs_noisy.shape}')
+    print(f'noisy img processed')
 
     imgs_clean = torch.cat(imgs_clean, dim=0)
     imgs_clean = unnormalize(imgs_clean).permute(0,2,3,1)
     labels_clean =  torch.cat(labels_clean, dim=0)
-    log.info(f'Clean Dataset shape: {imgs_noisy.shape}')
 
     imgs_noisy_numpy = imgs_noisy.detach().cpu().numpy()
     imgs_clean_numpy = imgs_clean.detach().cpu().numpy()
     labels_clean_numpy = labels_clean.cpu().numpy()
 
     np.save(os.path.join(save_dir, f'noisy_imgs.npy'), imgs_noisy_numpy)
+    print(f'noisy img saved')
     np.save(os.path.join(save_dir, f'imgs.npy'), imgs_clean_numpy)
     np.save(os.path.join(save_dir, f'labels.npy'), labels_clean_numpy)
 
 
-@hydra.main(config_path='conf_generate_noise', config_name='generate_noise_config')
-def main(cfg: DictConfig):
-    experiment_name = cfg.experiment.name
-    seed = cfg.experiment.seed
-    logdir = cfg.experiment.log_dir
-
-    dataset_name = cfg.dataset.name
-    input_dir = to_absolute_path(cfg.dataset.input_dir)
-    save_dir = to_absolute_path(cfg.dataset.save_dir)
-    n_classes = cfg.dataset.n_classes
-    in_channels = cfg.dataset.in_channels
-
-    unet_ck_dir = to_absolute_path(cfg.unet.ck_dir)
-    unet_epoch = cfg.unet.epoch
-
-    batch_size = cfg.params.batch_size
-
-    torch.manual_seed(seed)
+def main():
+    input_dir = f'./data/CIFAR10'
+    save_dir = f'./data/CIFAR10-aug'
+    in_channels = 3
+    unet_ck_dir = f'./checkpoints/unet'
+    unet_epoch = 50
+    batch_size = 512
     unet_ck_path = os.path.join(unet_ck_dir, f'unet_epoch{unet_epoch}.pt')
     os.makedirs(save_dir, exist_ok=True)
-
-    log.info(f'Experiment: {experiment_name}')
-    log.info(f'  -Seed: {seed}')
-    log.info(f'  -Logdir: {logdir}')
-
-    log.info(f'Dataset: {dataset_name}')    
-    log.info(f'  -Input Directory: {input_dir}')
-    log.info(f'  -Save Directory: {save_dir}')
-    log.info(f'  -Number of Classes: {n_classes}')
-    log.info(f'  -Number of Input Channels: {in_channels}')
-
-    log.info(f'Unet:')
-    log.info(f'  -Unet Checkpoint Path: {unet_ck_path}')
-
-    log.info(f'Params:')
-    log.info(f'  -Batch Size: {batch_size}')
-
     generate_noise(input_dir=input_dir, save_dir=save_dir, unet_ck_path=unet_ck_path, in_channels=in_channels, batch_size=batch_size)
 
 if __name__ == '__main__':
