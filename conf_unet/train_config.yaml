@@ -1,7 +1,7 @@
 bnn:
   name: "storesnet18"
   ck_dir: "./checkpoints/storesnet18"
-  epoch: 50
+  epoch: 80
   n_components: 4
 
 unet:

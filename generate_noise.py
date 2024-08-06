@@ -37,7 +37,6 @@ def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, batch_size):
 
     imgs_noisy = torch.cat(imgs_noisy, dim=0)
     imgs_noisy = unnormalize(imgs_noisy).permute(0,2,3,1)
-    print(f'noisy img processed')
 
     imgs_clean = torch.cat(imgs_clean, dim=0)
     imgs_clean = unnormalize(imgs_clean).permute(0,2,3,1)
@@ -48,17 +47,15 @@ def generate_noise(input_dir, save_dir, unet_ck_path, in_channels, batch_size):
     labels_clean_numpy = labels_clean.cpu().numpy()
 
     np.save(os.path.join(save_dir, f'noisy_imgs.npy'), imgs_noisy_numpy)
-    print(f'noisy img saved')
     np.save(os.path.join(save_dir, f'imgs.npy'), imgs_clean_numpy)
     np.save(os.path.join(save_dir, f'labels.npy'), labels_clean_numpy)
-
 
 def main():
     input_dir = f'./data/CIFAR10'
     save_dir = f'./data/CIFAR10-aug'
     in_channels = 3
     unet_ck_dir = f'./checkpoints/unet'
-    unet_epoch = 50
+    unet_epoch = 60
     batch_size = 512
     unet_ck_path = os.path.join(unet_ck_dir, f'unet_epoch{unet_epoch}.pt')
     os.makedirs(save_dir, exist_ok=True)

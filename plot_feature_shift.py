@@ -8,8 +8,8 @@ CIFAR10_CLASSES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog
 
 # Load the data and models
 ck_path = f'checkpoints/storesnet18/storesnet18_epoch200.pt'
-data_dir = f'data/CIFAR10-C'
-dataloader = get_dataloader(data_dir=data_dir, dataset='CIFAR10-C', batch_size=1, train=False, intensity=4)
+data_dir = f'data/CIFAR10'
+dataloader = get_dataloader(data_dir=data_dir, dataset='CIFAR10', batch_size=1, train=False)
 img, label = next(iter(dataloader))
 label = label.item()
 
@@ -58,7 +58,7 @@ det_probabilities_np = det_probabilities[0].detach().cpu().numpy().flatten()
 # Plotting function
 def plot_feature_shift(img, label_name, bnn_features, det_features, layer_names):
     num_layers = len(layer_names)
-    fig, axs = plt.subplots(2, num_layers + 2, figsize=(20, 10))
+    fig, axs = plt.subplots(2, num_layers + 2, figsize=(14, 6))
 
     # Plot the input image
     input_img = img[0].permute(1, 2, 0).cpu().numpy()  # Convert to HWC for plotting
@@ -78,12 +78,12 @@ def plot_feature_shift(img, label_name, bnn_features, det_features, layer_names)
         fmap_det_mean = torch.mean(fmap_det, dim=0)
 
         # Plot deterministic model feature map
-        axs[0, idx + 1].imshow(fmap_det_mean, cmap='viridis')
+        axs[0, idx + 1].imshow(fmap_det_mean, cmap='coolwarm')
         axs[0, idx + 1].set_title(f'Det - {layer_name}')
         axs[0, idx + 1].axis('off')
 
         # Plot stochastic model feature map
-        axs[1, idx + 1].imshow(fmap_bnn_mean, cmap='viridis')
+        axs[1, idx + 1].imshow(fmap_bnn_mean, cmap='coolwarm')
         axs[1, idx + 1].set_title(f'Sto - {layer_name}')
         axs[1, idx + 1].axis('off')
 
