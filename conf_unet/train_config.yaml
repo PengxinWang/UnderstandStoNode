@@ -15,7 +15,7 @@ experiment:
 loss:
   input_weight_initial: 0.25
   input_weight_final: 0.1
-  intermediate_layers: [2, 4, 6, 8]
+  intermediate_layers: [4, 6, 8]
   beta: 1.5
 
 params:

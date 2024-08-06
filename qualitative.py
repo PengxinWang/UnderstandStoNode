@@ -4,7 +4,6 @@ from model import *
 from data import get_dataloader
 from utils import unnormalize
 import os
-import numpy as np
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -28,7 +27,7 @@ def main():
     input_dir = './data/CIFAR10'
     in_channels = 3
     unet_ck_dir = './checkpoints/unet'
-    epochs = range(10, 51, 10)  # Epochs 10, 20, 30, 40, 50
+    epochs = range(20, 101, 20) 
     batch_size = 1
 
     # Load one image from the dataset
