@@ -13,14 +13,13 @@ experiment:
   log_dir: ".../logs"
 
 loss:
-  input_weight_initial: 0.25
-  input_weight_final: 0.025
-  intermediate_weight: 0.1
-  prediction_weight: 0.5
+  input_weight_initial: 0.5
+  input_weight_final: 0.1
   intermediate_layers: [2, 4, 6, 8]
+  beta: 1.2
 
 params:
-  n_epochs: 100
+  n_epochs: 50
   batch_size: 128
   lr: 1e-2
   weight_decay: 5e-4  

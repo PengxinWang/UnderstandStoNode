@@ -12,7 +12,8 @@ def get_dataloader(data_dir,
                    val=False,
                    val_ratio=0.2,
                    train_unet_ratio=None,
-                   intensity=0):
+                   intensity=0,
+                   corrupt_types=None):
     """
     Creates dataloaders for the specified dataset.
 
@@ -31,7 +32,7 @@ def get_dataloader(data_dir,
     elif aug_type == 'gaussian':
         train_transform = transforms.Compose([
                 transforms.ToTensor(),
-                transforms.RandomApply([transforms.GaussianBlur(kernel_size=3)], p=0.1),
+                # transforms.RandomApply([transforms.GaussianBlur(kernel_size=3)], p=0.1),
                 transforms.RandomApply([transforms.Lambda(lambda x: x + 0.05 * torch.randn_like(x))], p=0.1),
                 ])
     elif aug_type == 'full':
@@ -67,15 +68,11 @@ def get_dataloader(data_dir,
             trainset, _ = random_split(dataset, [train_size, len(dataset)-train_size]) 
 
     elif dataset == 'CIFAR10-C':
-        corrupt_types = ['saturate', 'shot_noise', 'gaussian_noise', 'zoom_blur', 'glass_blur', 'brightness', 'contrast', 'motion_blur', 'pixelate', 'snow', 'speckle_noise', 'spatter', 'gaussian_blur', 'frost', 'defocus_blur',
-                        'elastic_transform', 'impulse_noise', 'jpeg_compression', 'fog']
         if intensity == 0:
             raise ValueError(f'need to indicate intensity(from 1 to 5) for corrupted dataset')
         testset = CorruptDataset(data_dir, corrupt_types=corrupt_types, intensity=intensity, transform=base_transform)
 
     elif dataset == 'TinyImageNet-C':
-        corrupt_types = ['saturate', 'shot_noise', 'gaussian_noise', 'zoom_blur', 'glass_blur', 'brightness', 'contrast', 'motion_blur', 'pixelate', 'snow', 'speckle_noise', 'spatter', 'gaussian_blur', 'frost', 'defocus_blur',
-                        'elastic_transform', 'impulse_noise', 'jpeg_compression', 'fog']
         if intensity == 0:
             raise ValueError(f'need to indicate intensity(from 1 to 5) for corrupted dataset')
         testset = CorruptTinyImageNetDataset(data_dir, corrupt_types=corrupt_types, intensity=intensity, transform=base_transform)

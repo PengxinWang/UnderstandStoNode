@@ -43,6 +43,8 @@ class CorruptDataset(torch.utils.data.Dataset):
     create customed dataset for corrupted data from .npy file
     """
     def __init__(self, data_dir, corrupt_types, intensity, transform=None):
+        if corrupt_types is None:
+            raise ValueError(f'Corrupt types should be indicated')
         self.imgs = np.concatenate(
             [np.load(os.path.join(data_dir, f'{corrupt_type}.npy'))[(intensity-1)*10000:intensity*10000] for corrupt_type in corrupt_types], axis=0
         )

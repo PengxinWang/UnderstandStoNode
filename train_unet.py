@@ -14,7 +14,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 log = logging.getLogger(__name__)
 
-def train_unet(unet_ck_dir, bnn_ck_path, layers, input_weight_initial, input_weight_final, intermediate_weight, prediction_weight,  
+def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, input_weight_final,  
                input_dir, log_dir, n_classes, in_channels, batch_size, lr, weight_decay, n_epochs, n_components):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     writer = SummaryWriter(log_dir=log_dir)
@@ -22,10 +22,10 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, input_weight_initial, input_wei
     trainloader, valloader = get_dataloader(data_dir=input_dir,
                                  train=True, val=True,
                                  batch_size=batch_size,
-                                 train_unet_ratio=0.6)
+                                 train_unet_ratio=0.5)
     
     bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=1).to(device)
-    det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=0).to(device)
+    det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=2).to(device)
     
     model_dict = torch.load(bnn_ck_path)
     bnn_model.load_state_dict(model_dict)
@@ -46,7 +46,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, input_weight_initial, input_wei
         epoch_pred_loss_val = 0.
         epoch_input_loss_val = 0.
         input_weight = anneal_weight(epoch, initial_weight=input_weight_initial, final_weight=input_weight_final, last_epoch=int(n_epochs*2/3)+1)
-        ds_loss = DistributionShiftLoss(sto_model_features=sto_features, det_model_features=det_features)
+        ds_loss = DistributionShiftLoss(sto_model_features=sto_features, det_model_features=det_features, beta=beta)
 
         unet.train()
         with tqdm(total=len(trainloader), desc=f'Epoch {epoch}/{n_epochs}') as pbar:
@@ -54,7 +54,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, input_weight_initial, input_wei
                 imgs = imgs.to(device)
                 noisy_imgs = unet(imgs)
                 input_loss, intermediate_loss, pred_loss = ds_loss(noisy_imgs, imgs)
-                loss = input_weight * input_loss + intermediate_weight * intermediate_loss + prediction_weight * pred_loss
+                loss = input_weight * input_loss + intermediate_loss + pred_loss
 
                 epoch_loss += loss.item()
                 epoch_pred_loss += pred_loss.item()
@@ -74,7 +74,7 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, input_weight_initial, input_wei
                     imgs = imgs.to(device)
                     noisy_imgs = unet(imgs)
                     input_loss_val, intermediate_loss_val, pred_loss_val = ds_loss(noisy_imgs, imgs)
-                    loss_val = input_loss_val + intermediate_loss_val + pred_loss_val
+                    loss_val = input_weight * input_loss_val + intermediate_loss_val + pred_loss_val
 
                     epoch_loss_val += loss_val.item()
                     epoch_pred_loss_val += pred_loss_val.item()
@@ -113,8 +113,7 @@ def main(cfg: DictConfig):
     intermediate_layers = cfg.loss.intermediate_layers
     input_weight_initial = cfg.loss.input_weight_initial
     input_weight_final = cfg.loss.input_weight_final 
-    intermediate_weight = cfg.loss.intermediate_weight
-    prediction_weight = cfg.loss.prediction_weight
+    beta = cfg.loss.beta
 
     bnn_model_name = cfg.bnn.name
     bnn_ck_dir = to_absolute_path(cfg.bnn.ck_dir)
@@ -141,9 +140,8 @@ def main(cfg: DictConfig):
 
     log.info(f'Loss:')
     log.info(f'  -Layers: {intermediate_layers}')
+    log.info(f'  -Beta: {beta}')
     log.info(f'  -Input Weight: {input_weight_initial} to {input_weight_final}')
-    log.info(f'  -Intermediate Weight: {intermediate_weight}')
-    log.info(f'  -Prediction Weight: {prediction_weight}')
 
     log.info(f'Unet:')
     log.info(f'  -Unet Checkpoint Directory: {unet_ck_dir}') 
@@ -159,8 +157,8 @@ def main(cfg: DictConfig):
     log.info(f'  -Learning Rate: {lr}')
     log.info(f'  -Weight Decay: {weight_decay}')
 
-    train_unet(unet_ck_dir=unet_ck_dir, bnn_ck_path=bnn_ck_path, layers=intermediate_layers, input_weight_initial=input_weight_initial, input_weight_final=input_weight_final,
-               intermediate_weight=intermediate_weight, prediction_weight=prediction_weight, input_dir=input_dir, log_dir=logdir, n_components=n_components, n_classes=n_classes, in_channels=in_channels, 
+    train_unet(unet_ck_dir=unet_ck_dir, bnn_ck_path=bnn_ck_path, layers=intermediate_layers, beta=beta, input_weight_initial=input_weight_initial, input_weight_final=input_weight_final,
+               input_dir=input_dir, log_dir=logdir, n_components=n_components, n_classes=n_classes, in_channels=in_channels, 
                batch_size=batch_size, lr=lr, weight_decay=weight_decay, n_epochs=n_epochs)
 
 if __name__ == '__main__':
