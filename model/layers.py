@@ -10,7 +10,7 @@ class StoLayer(nn.Module):
                  prior_std=0.40, 
                  post_mean_init=(1.0, 0.05), 
                  post_std_init=(0.40, 0.02),
-                 mode='in'):
+                 mode='inout'):
         self.prior_mean=nn.Parameter(torch.tensor(prior_mean), requires_grad=False)
         self.prior_std=nn.Parameter(torch.tensor(prior_std), requires_grad=False)
 
@@ -28,8 +28,10 @@ class StoLayer(nn.Module):
         # latent_shape=[feature_size, 1, 1]
         # self.weight=[out_planes, in_planes, kernel_height, kernel_width] for Conv2d
         latent_shape = [1] * (self.weight.ndim-1)
-        if mode =='in':
+        if mode == 'in':
             latent_shape[0] = self.weight.shape[1]
+        elif mode == 'inout':
+            latent_shape[0] = sum(self.weight.shape[:2])
         else:
             raise(NotImplementedError)    
 
@@ -50,7 +52,7 @@ class StoLayer(nn.Module):
         mean = self.post_mean
         std = F.softplus(self.post_std)
         if stochastic_mode == 1:
-            epsilon = torch.randn_like(input, device=input.device, dtype=input.dtype)
+            epsilon = torch.randn((indices.size(0), *mean.shape[1:]), device=input.device, dtype=input.dtype)
             noise = mean[indices] + std[indices] * epsilon
         elif stochastic_mode == 2:
             noise = mean[indices] 
@@ -141,22 +143,22 @@ class StoLinear(nn.Linear, StoLayer):
                  prior_std=0.40, 
                  post_mean_init=(1.0, 0.05), 
                  post_std_init=(0.40, 0.02), 
-                 mode = 'in',
+                 mode = 'inout',
                  ):
         super().__init__(in_features, out_features, bias)
         self.sto_init(n_components, prior_mean, prior_std, post_mean_init, post_std_init, mode)
 
     def forward(self, x, indices):
         if self.stochastic == 0:
-            pass
-        if self.stochastic:
+            x = super().forward(x)
+        else:
             noise = self.get_mul_noise(x, indices, stochastic_mode=self.stochastic)
-            # noise.shape = [batch_size, in_features]
+            # noise.shape = [batch_size, in_features+out_features]
             if 'in' in self.mode:
-                x = x * noise
-            else:
-                raise ValueError(f'{self.mode} not supported')
-        x = super().forward(x)
+                x = x * noise[:, :x.shape[1]]
+            x = super().forward(x)
+            if 'out' in self.mode:
+                x = x * noise[:, -x.shape[1]:]
         return x
     
     def extra_repr(self):
@@ -178,7 +180,7 @@ class StoConv2d(nn.Conv2d, StoLayer):
                  prior_std=0.40,
                  post_mean_init=(1.0, 0.05),
                  post_std_init=(0.40, 0.02),
-                 mode='in',
+                 mode='inout',
                  ):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, padding_mode)
         self.sto_init(n_components, prior_mean, prior_std, post_mean_init, post_std_init, mode)
@@ -188,16 +190,15 @@ class StoConv2d(nn.Conv2d, StoLayer):
         indices: indice for chosen Gaussian components
         """
         if self.stochastic == 0:
-            pass
-        if self.stochastic:
+            x = super().forward(x)
+        else:
             noise = self.get_mul_noise(x, indices, stochastic_mode=self.stochastic)
-            # noise.shape = [batch_size, in_features]
+            # noise.shape = [batch_size, in_features+out_features]
             if 'in' in self.mode:
-                x = x*noise
-            else:
-                raise ValueError(f'{self.mode} not supported')
-
-        x = super().forward(x)
+                x = x * noise[:, :x.shape[1]]
+            x = super().forward(x)
+            if 'out' in self.mode:
+                x = x * noise[:, -x.shape[1]:]
         return x
     
     def extra_repr(self):

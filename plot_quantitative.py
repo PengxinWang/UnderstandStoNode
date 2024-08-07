@@ -77,7 +77,7 @@ def plot_results(processed_data):
 
     plt.suptitle('Evaluation Results Across Models')
     plt.tight_layout(rect=[0, 0, 1, 0.95])
-    plt.savefig(f'quantitative_result.png')
+    plt.savefig(f'./plot_results/quantitative_result.png')
     plt.show()
 
 result_dir = './results'

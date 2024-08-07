@@ -103,6 +103,7 @@ def plot_feature_shift(img, label_name, bnn_features, det_features, layer_names)
     axs[1, -1].set_ylabel('Probability')
 
     plt.tight_layout()
+    plt.savefig(f'./plot_results/feature_shift.png')
     plt.show()
 
 # List of layer names to visualize

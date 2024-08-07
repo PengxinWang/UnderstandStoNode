@@ -56,9 +56,9 @@ def main():
         plt.title(f'Epoch {epoch}')
         plt.axis('off')
 
-    plt.suptitle('Original and Shifted Images by Different UNet Epochs')
+    plt.suptitle('Input shift')
     plt.tight_layout()
-    plt.savefig(f'./qualitative_results/vis_shift.png')
+    plt.savefig(f'./plot_results/input_shift.png')
     plt.show()
 
 if __name__ == '__main__':

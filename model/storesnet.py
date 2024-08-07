@@ -27,7 +27,7 @@ def sto_conv3x3(in_planes,
                prior_std=0.40,
                post_mean_init=(1.0, 0.05),
                post_std_init=(0.40, 0.02),
-               mode='in',
+               mode='inout',
                ):
     """3x3 stochastic convolution with padding"""
     return StoConv2d(in_planes, out_planes, kernel_size=3, stride=stride, bias=False, padding=1,
@@ -42,7 +42,7 @@ def sto_conv1x1(in_planes,
                prior_std=0.40,
                post_mean_init=(1.0, 0.05),
                post_std_init=(0.40, 0.02),
-               mode='in',
+               mode='inout',
                ):
     """1x1 stochastic convolution"""
     return StoConv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False,
@@ -123,7 +123,7 @@ class StoResNet(StoModel):
         prior_std=0.40, 
         post_mean_init=(1.0, 0.05), 
         post_std_init=(0.40, 0.02),
-        mode='in',
+        mode='inout',
         stochastic=1
     ) -> None:
         super().__init__()
