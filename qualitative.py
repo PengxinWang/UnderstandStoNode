@@ -24,10 +24,11 @@ def generate_noise(img, unet_ck_path, in_channels):
     return img_noisy
 
 def main():
+    torch.manual_seed(42)
     input_dir = './data/CIFAR10'
     in_channels = 3
     unet_ck_dir = './checkpoints/unet'
-    epochs = range(20, 101, 20) 
+    epochs = range(10, 51, 10) 
     batch_size = 1
 
     # Load one image from the dataset

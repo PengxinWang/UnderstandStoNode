@@ -34,27 +34,20 @@ class ModelFeatures(nn.Module):
         return features
 
 class DistributionShiftLoss(nn.Module):
-    def __init__(self, sto_model_features, det_model_features, beta=1):
+    def __init__(self, sto_model_features, det_model_features):
         super().__init__()
         self.sto_model_features = sto_model_features
         self.det_model_features = det_model_features
-        self.beta = beta
 
     def forward(self, noisy_imgs, clean_imgs):
         clean_features = self.sto_model_features(clean_imgs)
         noisy_features = self.det_model_features(noisy_imgs)
         
-        input_loss = 0.
-        pred_loss = 0.
-        intermediate_loss = 0.
+        losses = []
 
-        for idx, (c_f, n_f) in enumerate(zip(clean_features, noisy_features)):
-            beta_weight = self.beta ** idx
-            
+        for c_f, n_f in zip(clean_features, noisy_features):
             if c_f[0] == 'output layer':
-                pred_loss += beta_weight * cross_entropy(input=n_f[1], target=c_f[1])
-            elif c_f[0] == 'input layer':
-                input_loss += beta_weight * F.mse_loss(n_f[1], c_f[1])
+                losses.append((c_f[0], cross_entropy(input=n_f[1], target=c_f[0])))
             else:
-                intermediate_loss += beta_weight * F.mse_loss(n_f[1], c_f[1])
-        return input_loss, intermediate_loss, pred_loss
+                losses.append((c_f[0], F.mse_loss(c_f[1], n_f[1])))
+        return losses

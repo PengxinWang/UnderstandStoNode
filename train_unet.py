@@ -19,8 +19,8 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, inp
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     writer = SummaryWriter(log_dir=log_dir)
 
-    trainloader, valloader = get_dataloader(data_dir=input_dir,
-                                 train=True, val=True,
+    trainloader = get_dataloader(data_dir=input_dir,
+                                 train=True, val=False,
                                  batch_size=batch_size,
                                  train_unet_ratio=0.3)
     
@@ -40,22 +40,27 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, inp
 
     for epoch in range(n_epochs):
         epoch_loss = 0.
-        epoch_loss_val = 0.
         epoch_input_loss = 0.
         epoch_pred_loss = 0.
-        epoch_pred_loss_val = 0.
-        epoch_input_loss_val = 0.
         input_weight = anneal_weight(epoch, initial_weight=input_weight_initial, final_weight=input_weight_final, last_epoch=int(n_epochs*2/3)+1)
-        ds_loss = DistributionShiftLoss(sto_model_features=sto_features, det_model_features=det_features, beta=beta)
+        ds_loss = DistributionShiftLoss(sto_model_features=sto_features, det_model_features=det_features)
 
         unet.train()
         with tqdm(total=len(trainloader), desc=f'Epoch {epoch}/{n_epochs}') as pbar:
             for batch_id, (imgs, _) in enumerate(trainloader):
                 imgs = imgs.to(device)
                 noisy_imgs = unet(imgs)
-                input_loss, intermediate_loss, pred_loss = ds_loss(noisy_imgs, imgs)
-                loss = input_weight * input_loss + intermediate_loss + pred_loss
-
+                losses = ds_loss(noisy_imgs, imgs)
+                loss = 0.
+                for i, (layer_name, layer_loss) in enumerate(losses):
+                    if layer_name == 'input layer':
+                        input_loss = layer_loss
+                        loss += input_weight * beta**i * layer_loss
+                    elif layer_name == 'output layer':
+                        pred_loss = layer_loss
+                        loss += beta**i * layer_loss
+                    else:
+                        loss += beta**i * layer_loss
                 epoch_loss += loss.item()
                 epoch_pred_loss += pred_loss.item()
                 epoch_input_loss += input_loss.item()
@@ -66,26 +71,6 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, inp
 
                 pbar.set_postfix({'pred_loss': f'{epoch_pred_loss/(1+batch_id):.4f}', 'input_loss':f'{epoch_input_loss/(1+batch_id):.4f}', 'loss': f'{epoch_loss/(1+batch_id):.4f}'})
                 pbar.update()
-        
-        unet.eval()
-        with torch.no_grad():
-            with tqdm(total=len(valloader), desc=f'Epoch {epoch}/{n_epochs}') as pbar:
-                for batch_id, (imgs, _) in enumerate(valloader):
-                    imgs = imgs.to(device)
-                    noisy_imgs = unet(imgs)
-                    input_loss_val, intermediate_loss_val, pred_loss_val = ds_loss(noisy_imgs, imgs)
-                    loss_val = input_weight * input_loss_val + intermediate_loss_val + pred_loss_val
-
-                    epoch_loss_val += loss_val.item()
-                    epoch_pred_loss_val += pred_loss_val.item()
-                    epoch_input_loss_val += input_loss_val.item()
-
-                    pbar.set_postfix({'pred_loss_val': f'{epoch_pred_loss_val/(1+batch_id):.4f}', 'input_loss_val':f'{epoch_input_loss_val/(1+batch_id):.4f}', 'loss_val': f'{epoch_loss_val/(1+batch_id):.4f}'})
-                    pbar.update()
-
-        writer.add_scalars('Loss', {'train': epoch_loss/len(trainloader), 'val': epoch_loss_val/len(valloader)}, epoch)
-        writer.add_scalars('pred loss', {'train': epoch_pred_loss/len(trainloader), 'val': epoch_pred_loss_val/len(valloader)}, epoch)
-        writer.add_scalars('input loss', {'train': epoch_input_loss/len(trainloader), 'val': epoch_input_loss_val/len(valloader)}, epoch)
 
         if (epoch+1) % 10 == 0:
             unet_ck_path = os.path.join(unet_ck_dir, f'unet_epoch{epoch+1}.pt')

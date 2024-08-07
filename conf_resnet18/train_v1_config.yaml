@@ -8,11 +8,11 @@ experiment:
   log_dir: ".../runs"
 
 params:
-  n_epoch: 200
+  n_epoch: 300
   batch_size: 128
   lr: 1e-3
   aug_type: "geometric"
-  weight_decay: 1e-3
+  weight_decay: 1e-4
 
 dataset:
   name: CIFAR10-bnnaug
