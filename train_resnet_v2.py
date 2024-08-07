@@ -72,7 +72,7 @@ def train(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_ep
 
         writer.add_scalars('Loss', {'train': epoch_loss/len(trainloader), 'val': epoch_loss_val/len(valloader)}, epoch)
 
-        if (epoch+1) % 20 == 0:
+        if (epoch+1) % 50 == 0:
             ck_path = os.path.join(ck_dir, f'resnet18_epoch{epoch+1}.pt')
             torch.save(model.state_dict(), ck_path)
             log.info(f'Saved checkpoint: {ck_path}')
