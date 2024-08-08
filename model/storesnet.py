@@ -153,7 +153,7 @@ class StoResNet(StoModel):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AvgPool2d((4, 4))
-        self.T = torch.nn.Parameter(torch.ones(1) * 1.5, requires_grad=True)
+        self.T = torch.nn.Parameter(torch.ones(1) * 1.1, requires_grad=True)
         self.fc = StoLinear(512*block.expansion, num_classes, n_components=n_components, mode = "inout")
         self.n_sample = n_sample
 
