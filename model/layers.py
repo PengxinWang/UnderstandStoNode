@@ -139,10 +139,10 @@ class StoLinear(nn.Linear, StoLayer):
                  out_features: int, 
                  bias: bool=False,
                  n_components=4, 
-                 prior_mean=1.0, 
-                 prior_std=0.40, 
-                 post_mean_init=(1.0, 0.05), 
-                 post_std_init=(0.40, 0.02), 
+                 prior_mean=0.5, 
+                 prior_std=0.30, 
+                 post_mean_init=(0.50, 0.25), 
+                 post_std_init=(0.25, 0.1), 
                  mode = 'inout',
                  ):
         super().__init__(in_features, out_features, bias)

@@ -27,7 +27,7 @@ def sto_conv3x3(in_planes,
                prior_std=0.40,
                post_mean_init=(1.0, 0.05),
                post_std_init=(0.40, 0.02),
-               mode='inout',
+               mode='in',
                ):
     """3x3 stochastic convolution with padding"""
     return StoConv2d(in_planes, out_planes, kernel_size=3, stride=stride, bias=False, padding=1,
@@ -42,7 +42,7 @@ def sto_conv1x1(in_planes,
                prior_std=0.40,
                post_mean_init=(1.0, 0.05),
                post_std_init=(0.40, 0.02),
-               mode='inout',
+               mode='in',
                ):
     """1x1 stochastic convolution"""
     return StoConv2d(in_planes, out_planes, kernel_size=1, stride=stride, bias=False,
@@ -123,7 +123,7 @@ class StoResNet(StoModel):
         prior_std=0.40, 
         post_mean_init=(1.0, 0.05), 
         post_std_init=(0.40, 0.02),
-        mode='inout',
+        mode='in',
         stochastic=1
     ) -> None:
         super().__init__()
@@ -152,8 +152,7 @@ class StoResNet(StoModel):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AvgPool2d((4, 4))
-        self.fc = StoLinear(512*block.expansion, num_classes, n_components=n_components, prior_mean=prior_mean, prior_std=prior_std,
-                            post_mean_init=post_mean_init, post_std_init=post_std_init, mode = mode)
+        self.fc = StoLinear(512*block.expansion, num_classes, n_components=n_components, mode = "inout")
         
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
