@@ -50,7 +50,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
         with tqdm(total=len(trainloader), desc=f'Training Epoch {epoch+1}/{n_epoch}') as pbar:
             for batch_id, (imgs, labels) in enumerate(trainloader):
                 imgs, labels = imgs.to(device), labels.to(device)
-                pred = model(imgs).mean(dim=1)
+                pred = model(imgs)
 
                 nll, kl = model.vi_loss(pred, labels, n_sample, entropy_weight=entropy_weight)
                 kl_weight = anneal_weight(epoch=epoch, initial_weight=kl_min, final_weight=kl_max, last_epoch=int(n_epoch*2/3)+1)
@@ -71,7 +71,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
             with tqdm(total=len(valloader), desc=f'Validation Epoch {epoch+1}/{n_epoch}') as pbar:
                 for batch_id, (imgs, labels) in enumerate(valloader):
                     imgs, labels = imgs.to(device), labels.to(device)
-                    pred = model(imgs).mean(dim=1)
+                    pred = model(imgs)
 
                     nll, kl = model.vi_loss(pred, labels, n_sample, entropy_weight=entropy_weight)
                     kl_weight = anneal_weight(epoch=epoch, initial_weight=kl_min, final_weight=kl_max, last_epoch=int(n_epoch*2/3)+1)

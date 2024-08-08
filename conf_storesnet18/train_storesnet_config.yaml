@@ -19,7 +19,7 @@ params:
   weight_decay: 0.
   entropy_weight: 1.
   n_sample: 1
-  kl_min: 0.3
+  kl_min: 1e-2
   kl_max: 1
   prior_mean: 0.9
   prior_std: 0.64

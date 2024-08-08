@@ -158,7 +158,7 @@ class StoLinear(nn.Linear, StoLayer):
                 x = x * noise[:, :x.shape[1]]
             x = super().forward(x)
             if 'out' in self.mode:
-                x = x * noise[:, -x.shape[1]:] * 0.95
+                x = x * noise[:, -x.shape[1]:]
         return x
     
     def extra_repr(self):
