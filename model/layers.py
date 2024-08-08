@@ -139,10 +139,10 @@ class StoLinear(nn.Linear, StoLayer):
                  out_features: int, 
                  bias: bool=False,
                  n_components=4, 
-                 prior_mean=0.5, 
+                 prior_mean=0.8, 
                  prior_std=0.30, 
-                 post_mean_init=(0.40, 0.25), 
-                 post_std_init=(0.20, 0.1), 
+                 post_mean_init=(0.90, 0.25), 
+                 post_std_init=(0.50, 0.25), 
                  mode = 'inout',
                  ):
         super().__init__(in_features, out_features, bias)
@@ -158,7 +158,7 @@ class StoLinear(nn.Linear, StoLayer):
                 x = x * noise[:, :x.shape[1]]
             x = super().forward(x)
             if 'out' in self.mode:
-                x = x * noise[:, -x.shape[1]:]
+                x = x * noise[:, -x.shape[1]:] * 0.5
         return x
     
     def extra_repr(self):

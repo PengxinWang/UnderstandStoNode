@@ -7,7 +7,7 @@ from model import *
 CIFAR10_CLASSES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 # Load the data and models
-ck_path = f'checkpoints/storesnet18/storesnet18_epoch50.pt'
+ck_path = f'checkpoints/storesnet18/storesnet18_epoch300.pt'
 data_dir = f'data/CIFAR10'
 dataloader = get_dataloader(data_dir=data_dir, dataset='CIFAR10', batch_size=1, train=False)
 img, label = next(iter(dataloader))

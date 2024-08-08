@@ -26,7 +26,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
     writer = SummaryWriter(log_dir=log_dir)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_component, prior_mean=prior_mean, 
-                        prior_std=prior_std, post_mean_init=post_mean_init, post_std_init=post_std_init).to(device)
+                        prior_std=prior_std, post_mean_init=post_mean_init, post_std_init=post_std_init, n_sample=n_sample).to(device)
 
     trainloader, valloader = get_dataloader(data_dir=data_dir, dataset=dataset,
                                             batch_size=batch_size,
@@ -38,7 +38,6 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: lr_schedule(epoch, n_epoch, milestones=milestones, final_factor=final_factor))
 
     entropy_weight = entropy_weight
-    n_sample = n_sample
     size_trainset = len(trainloader) * batch_size
 
     for epoch in range(n_epoch):
@@ -51,7 +50,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
         with tqdm(total=len(trainloader), desc=f'Training Epoch {epoch+1}/{n_epoch}') as pbar:
             for batch_id, (imgs, labels) in enumerate(trainloader):
                 imgs, labels = imgs.to(device), labels.to(device)
-                pred = model(imgs)
+                pred = model(imgs).mean(dim=1)
 
                 nll, kl = model.vi_loss(pred, labels, n_sample, entropy_weight=entropy_weight)
                 kl_weight = anneal_weight(epoch=epoch, initial_weight=kl_min, final_weight=kl_max, last_epoch=int(n_epoch*2/3)+1)
@@ -72,7 +71,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
             with tqdm(total=len(valloader), desc=f'Validation Epoch {epoch+1}/{n_epoch}') as pbar:
                 for batch_id, (imgs, labels) in enumerate(valloader):
                     imgs, labels = imgs.to(device), labels.to(device)
-                    pred = model(imgs)
+                    pred = model(imgs).mean(dim=1)
 
                     nll, kl = model.vi_loss(pred, labels, n_sample, entropy_weight=entropy_weight)
                     kl_weight = anneal_weight(epoch=epoch, initial_weight=kl_min, final_weight=kl_max, last_epoch=int(n_epoch*2/3)+1)

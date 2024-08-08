@@ -87,6 +87,7 @@ def main(cfg: DictConfig):
     model_name = f'{cfg.model.name}_v{cfg.model.version}'
     stochastic = cfg.model.stochastic
     n_components = cfg.model.n_components
+    n_sample = cfg.model.n_sample
 
     log.info(f'Experiment: {experiment_name}')
     log.info(f'  -Seed: {seed}')
@@ -103,6 +104,7 @@ def main(cfg: DictConfig):
     log.info(f'  - ck_dir: {ck_dir}')
     log.info(f'  - n_components: {n_components}')
     log.info(f'  - stochastic: {stochastic}')
+    log.info(f'  - n_sample: {n_sample}')
 
     log.info(f'Testing with batch size: {test_bsize}, epochs: {n_epochs}, ece_bins: {ece_bins}')
     
@@ -115,7 +117,7 @@ def main(cfg: DictConfig):
 
     results = {}
     for epoch in n_epochs:
-        model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_components, stochastic=stochastic).to(device)
+        model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_components, stochastic=stochastic, n_sample=n_sample).to(device)
         test_ck_path = os.path.join(ck_dir, f'storesnet18_epoch{epoch}.pt')
         model.load_state_dict(torch.load(test_ck_path))
         log.info(f'Evaluating model at epoch {epoch}')

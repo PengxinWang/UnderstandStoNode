@@ -10,7 +10,7 @@ experiment:
   log_dir: ".../runs/train"
 
 params:
-  n_epoch: 300
+  n_epoch: 1
   batch_size: 128
   lr: 1e-3
   aug_type: "geometric"

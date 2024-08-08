@@ -124,7 +124,8 @@ class StoResNet(StoModel):
         post_mean_init=(1.0, 0.05), 
         post_std_init=(0.40, 0.02),
         mode='in',
-        stochastic=1
+        stochastic=1,
+        n_sample=1
     ) -> None:
         super().__init__()
         if norm_layer is None:
@@ -154,7 +155,8 @@ class StoResNet(StoModel):
         self.avgpool = nn.AvgPool2d((4, 4))
         self.T = torch.nn.Parameter(torch.ones(1) * 1.5, requires_grad=True)
         self.fc = StoLinear(512*block.expansion, num_classes, n_components=n_components, mode = "inout")
-        
+        self.n_sample = n_sample
+
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(
@@ -198,14 +200,14 @@ class StoResNet(StoModel):
 
         return StoSequential(*layers)
     
-    def forward(self, x, n_sample=1, indices=None):
+    def forward(self, x,  indices=None):
         """
         input: x.shape=[batch_size, in_channel, h, w]
         output: x.shape=[batch_size, n_sample, n_classes]
         note: log_softmax is applied to model's output 
         """
-        if n_sample > 1:
-            x = torch.repeat_interleave(x, n_sample, dim=0)
+        if self.n_sample > 1:
+            x = torch.repeat_interleave(x, self.n_sample, dim=0)
 
         if indices is None:
             indices = torch.arange(x.size(0), dtype=torch.long, device=x.device) % self.n_components
@@ -223,8 +225,8 @@ class StoResNet(StoModel):
         x = self.fc(x, indices)
         x = x/self.T
         x = F.log_softmax(x, dim=-1)
-        x = x.view(-1, n_sample, x.size(1))
+        x = x.view(-1, self.n_sample, x.size(1))
         return x
     
-def StoResNet18(num_classes=10, in_channels=3, n_components=4, stochastic=1, prior_mean=1.0, prior_std=0.32, post_mean_init=[1.0, 0.05], post_std_init=[0.40, 0.02]):
-    return StoResNet(StoBasicBlock, [2,2,2,2], num_classes=num_classes, in_channels=in_channels, n_components=n_components, stochastic=stochastic, prior_mean=prior_mean, prior_std=prior_std, post_mean_init=post_mean_init, post_std_init=post_std_init)
+def StoResNet18(num_classes=10, in_channels=3, n_components=4, stochastic=1, prior_mean=1.0, prior_std=0.32, post_mean_init=[1.0, 0.05], post_std_init=[0.40, 0.02], n_sample=1):
+    return StoResNet(StoBasicBlock, [2,2,2,2], num_classes=num_classes, in_channels=in_channels, n_components=n_components, stochastic=stochastic, prior_mean=prior_mean, prior_std=prior_std, post_mean_init=post_mean_init, post_std_init=post_std_init, n_sample=n_sample)
