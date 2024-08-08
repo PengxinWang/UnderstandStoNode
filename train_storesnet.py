@@ -33,7 +33,8 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
                                             train=True, val=True,
                                             aug_type=aug_type)
 
-    optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    # optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.0, weight_decay=weight_decay, nesterov=False)
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: lr_schedule(epoch, n_epoch, milestones=milestones, final_factor=final_factor))
 
     entropy_weight = entropy_weight

@@ -141,8 +141,8 @@ class StoLinear(nn.Linear, StoLayer):
                  n_components=4, 
                  prior_mean=0.5, 
                  prior_std=0.30, 
-                 post_mean_init=(0.50, 0.25), 
-                 post_std_init=(0.25, 0.1), 
+                 post_mean_init=(0.40, 0.25), 
+                 post_std_init=(0.20, 0.1), 
                  mode = 'inout',
                  ):
         super().__init__(in_features, out_features, bias)

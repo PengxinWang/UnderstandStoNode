@@ -66,7 +66,7 @@ def visualize_all_corruptions(cifar10_testset, corruption_types, severity_levels
     # Plot the original image separately
     plt.figure(figsize=(4, 4))
     plt.imshow(img_np)
-    plt.title(f"Original Image: {cifar10_labels[label]}")
+    # plt.title(f"Original Image: {cifar10_labels[label]}")
     plt.axis('off')
     plt.show()
 

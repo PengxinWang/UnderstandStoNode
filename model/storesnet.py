@@ -152,6 +152,7 @@ class StoResNet(StoModel):
         self.layer4 = self._make_layer(block, 512, layers[3], stride=2,
                                        dilate=replace_stride_with_dilation[2])
         self.avgpool = nn.AvgPool2d((4, 4))
+        self.T = torch.nn.Parameter(torch.ones(1) * 1.5, requires_grad=True)
         self.fc = StoLinear(512*block.expansion, num_classes, n_components=n_components, mode = "inout")
         
         for m in self.modules():
@@ -220,6 +221,7 @@ class StoResNet(StoModel):
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.fc(x, indices)
+        x = x/self.T
         x = F.log_softmax(x, dim=-1)
         x = x.view(-1, n_sample, x.size(1))
         return x

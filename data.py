@@ -10,7 +10,7 @@ def get_dataloader(data_dir,
                    aug_type=None,
                    train=True,
                    val=False,
-                   val_ratio=0.2,
+                   val_ratio=0.1,
                    train_unet_ratio=None,
                    intensity=0,
                    corrupt_types=None):

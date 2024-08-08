@@ -7,7 +7,7 @@ from model import *
 CIFAR10_CLASSES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 # Load the data and models
-ck_path = f'checkpoints/storesnet18/storesnet18_epoch200.pt'
+ck_path = f'checkpoints/storesnet18/storesnet18_epoch50.pt'
 data_dir = f'data/CIFAR10'
 dataloader = get_dataloader(data_dir=data_dir, dataset='CIFAR10', batch_size=1, train=False)
 img, label = next(iter(dataloader))
@@ -21,6 +21,28 @@ det_model = StoResNet18(stochastic=2)
 model_dict = torch.load(ck_path)
 bnn_model.load_state_dict(model_dict)
 det_model.load_state_dict(model_dict)
+
+# print(f'what is the current temperature: {bnn_model.T}')
+# # Assuming the linear layer with post_mean and post_std is named 'linear' in the model
+# post_mean = bnn_model.fc.post_mean
+# post_std = bnn_model.fc.post_std
+# import seaborn as sns
+# # Detach tensor from computation graph and convert to NumPy for easier handling
+# tensor_np = post_mean.detach().cpu().numpy()
+
+# # Flatten the tensor to create a 1D array of all the values
+# tensor_flat = tensor_np.flatten()
+
+# # Plotting the distribution
+# plt.figure(figsize=(10, 6))
+# sns.histplot(tensor_flat, bins=30, kde=True)
+# plt.title('Distribution of Tensor Values')
+# plt.xlabel('Value')
+# plt.ylabel('Frequency')
+# plt.show()
+# # Print post_mean and post_std
+# exit()
+
 bnn_model.eval()
 det_model.eval()
 bnn_features, det_features = {}, {}
