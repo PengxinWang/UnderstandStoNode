@@ -9,7 +9,7 @@ experiment:
   res_dir: "./results/resnet18_v2"
 
 params:
-  n_epoch: [100, 200]
+  n_epoch: [300]
   batch_size: 512
   ece_bins: 20
   
