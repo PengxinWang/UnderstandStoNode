@@ -2,7 +2,7 @@ model:
   name: "storesnet18"
   ck_dir: "./checkpoints/storesnet18" 
   n_components: 4
-  n_sample: 4
+  n_samples: 4
   stochastic: 1
   version: 1
 
@@ -12,7 +12,7 @@ experiment:
   res_dir: "./results/storesnet18"
 
 params:
-  n_epochs: [100, 200]
+  n_epochs: [50, 100, 200, 300]
   batch_size: 512
   ece_bins: 20
   

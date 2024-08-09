@@ -28,7 +28,7 @@ def main():
     input_dir = './data/CIFAR10'
     in_channels = 3
     unet_ck_dir = './checkpoints/unet'
-    epochs = range(10, 51, 10) 
+    epochs = range(1,2) 
     batch_size = 1
 
     # Load one image from the dataset

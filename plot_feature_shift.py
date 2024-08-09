@@ -7,41 +7,16 @@ from model import *
 CIFAR10_CLASSES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 # Load the data and models
-ck_path = f'checkpoints/storesnet18/storesnet18_epoch300.pt'
+ck_path = f'checkpoints/storesnet18/storesnet18_epoch50.pt'
 data_dir = f'data/CIFAR10'
-dataloader = get_dataloader(data_dir=data_dir, dataset='CIFAR10', batch_size=1, train=False)
-img, label = next(iter(dataloader))
-label = label.item()
+dataloader = get_dataloader(data_dir=data_dir, dataset='CIFAR10', batch_size=16, train=False)
+imgs, labels = next(iter(dataloader))
 
-# Get the class name corresponding to the label
-label_name = CIFAR10_CLASSES[label]
-
-bnn_model = StoResNet18(stochastic=1)
+bnn_model = StoResNet18(stochastic=1, n_sample=4)
 det_model = StoResNet18(stochastic=2)
 model_dict = torch.load(ck_path)
 bnn_model.load_state_dict(model_dict)
 det_model.load_state_dict(model_dict)
-
-# print(f'what is the current temperature: {bnn_model.T}')
-# # Assuming the linear layer with post_mean and post_std is named 'linear' in the model
-# post_mean = bnn_model.fc.post_mean
-# post_std = bnn_model.fc.post_std
-# import seaborn as sns
-# # Detach tensor from computation graph and convert to NumPy for easier handling
-# tensor_np = post_mean.detach().cpu().numpy()
-
-# # Flatten the tensor to create a 1D array of all the values
-# tensor_flat = tensor_np.flatten()
-
-# # Plotting the distribution
-# plt.figure(figsize=(10, 6))
-# sns.histplot(tensor_flat, bins=30, kde=True)
-# plt.title('Distribution of Tensor Values')
-# plt.xlabel('Value')
-# plt.ylabel('Frequency')
-# plt.show()
-# # Print post_mean and post_std
-# exit()
 
 bnn_model.eval()
 det_model.eval()
@@ -50,7 +25,7 @@ bnn_features, det_features = {}, {}
 # Register hooks
 def get_features(name, features_dict):
     def hook(module, input, output):
-        features_dict[name] = output
+        features_dict[name] = output.detach().cpu()
     return hook
 
 def register_hooks(model, feature_dict):
@@ -61,73 +36,73 @@ def register_hooks(model, feature_dict):
 register_hooks(bnn_model, bnn_features)
 register_hooks(det_model, det_features)
 
-# Pass the image through the models
+# Pass the images through the models
 with torch.no_grad():
-    bnn_output = bnn_model(img)
-    det_output = det_model(img)
+    bnn_output = bnn_model(imgs).mean(dim=1)
+    det_output = det_model(imgs)
 
+# Convert output probabilities
 bnn_probabilities = torch.exp(bnn_output)
 det_probabilities = torch.exp(det_output)
 
-# Get the class predictions
-_, bnn_preds = torch.max(bnn_probabilities, dim=1)
-_, det_preds = torch.max(det_probabilities, dim=1)
-
-# Convert probabilities to numpy for plotting
-bnn_probabilities_np = bnn_probabilities[0].detach().cpu().numpy().flatten()
-det_probabilities_np = det_probabilities[0].detach().cpu().numpy().flatten()
-
 # Plotting function
-def plot_feature_shift(img, label_name, bnn_features, det_features, layer_names):
+def plot_feature_shift(imgs, labels, bnn_features, det_features, layer_names):
     num_layers = len(layer_names)
-    fig, axs = plt.subplots(2, num_layers + 2, figsize=(14, 6))
+    for i, img in enumerate(imgs):
+        label = labels[i].item()
+        label_name = CIFAR10_CLASSES[label]
+        
+        fig, axs = plt.subplots(2, num_layers + 2, figsize=(14, 6))
+        
+        # Plot the input image
+        input_img = img.permute(1, 2, 0).cpu().numpy()  # Convert to HWC for plotting
+        axs[0, 0].imshow(input_img)
+        axs[0, 0].set_title(f'DET Input Image: {label_name}({label})')
+        axs[0, 0].axis('off')
+        axs[1, 0].imshow(input_img)
+        axs[1, 0].set_title(f'STO Input Image: {label_name}({label})')
+        axs[1, 0].axis('off')
 
-    # Plot the input image
-    input_img = img[0].permute(1, 2, 0).cpu().numpy()  # Convert to HWC for plotting
-    axs[0, 0].imshow(input_img)
-    axs[0, 0].set_title(f'DET Input Image: {label_name}({label})')
-    axs[0, 0].axis('off')
-    axs[1, 0].imshow(input_img)
-    axs[1, 0].set_title(f'STO Input Image: {label_name}({label})')
-    axs[1, 0].axis('off')
+        for idx, layer_name in enumerate(layer_names):
+            # Compute mean across feature map channels
+            fmap_bnn = bnn_features[layer_name][i]
+            fmap_det = det_features[layer_name][i]
 
-    for idx, layer_name in enumerate(layer_names):
-        # Compute mean across feature map channels
-        fmap_bnn = bnn_features[layer_name][0].detach().cpu()
-        fmap_det = det_features[layer_name][0].detach().cpu()
+            fmap_bnn_mean = torch.mean(fmap_bnn, dim=0)
+            fmap_det_mean = torch.mean(fmap_det, dim=0)
 
-        fmap_bnn_mean = torch.mean(fmap_bnn, dim=0)
-        fmap_det_mean = torch.mean(fmap_det, dim=0)
+            # Plot deterministic model feature map
+            axs[0, idx + 1].imshow(fmap_det_mean, cmap='coolwarm')
+            axs[0, idx + 1].set_title(f'Det - {layer_name}')
+            axs[0, idx + 1].axis('off')
 
-        # Plot deterministic model feature map
-        axs[0, idx + 1].imshow(fmap_det_mean, cmap='coolwarm')
-        axs[0, idx + 1].set_title(f'Det - {layer_name}')
-        axs[0, idx + 1].axis('off')
+            # Plot stochastic model feature map
+            axs[1, idx + 1].imshow(fmap_bnn_mean, cmap='coolwarm')
+            axs[1, idx + 1].set_title(f'Sto - {layer_name}')
+            axs[1, idx + 1].axis('off')
 
-        # Plot stochastic model feature map
-        axs[1, idx + 1].imshow(fmap_bnn_mean, cmap='coolwarm')
-        axs[1, idx + 1].set_title(f'Sto - {layer_name}')
-        axs[1, idx + 1].axis('off')
+        # Plot output distributions
+        bnn_probabilities_np = bnn_probabilities[i].detach().cpu().numpy().flatten()
+        det_probabilities_np = det_probabilities[i].detach().cpu().numpy().flatten()
+        classes = list(range(len(bnn_probabilities_np)))
 
-    # Plot output distributions
-    classes = list(range(len(bnn_probabilities_np)))
+        # Plot deterministic model output distribution
+        axs[0, -1].bar(classes, det_probabilities_np)
+        axs[0, -1].set_title('Det Output Distribution')
+        axs[0, -1].set_xlabel('Class')
+        axs[0, -1].set_ylabel('Probability')
 
-    # Plot deterministic model output distribution
-    axs[0, -1].bar(classes, det_probabilities_np)
-    axs[0, -1].set_title('Det Output Distribution')
-    axs[0, -1].set_xlabel('Class')
-    axs[0, -1].set_ylabel('Probability')
+        # Plot stochastic model output distribution
+        axs[1, -1].bar(classes, bnn_probabilities_np)
+        axs[1, -1].set_title('BNN Output Distribution')
+        axs[1, -1].set_xlabel('Class')
+        axs[1, -1].set_ylabel('Probability')
 
-    # Plot stochastic model output distribution
-    axs[1, -1].bar(classes, bnn_probabilities_np)
-    axs[1, -1].set_title('BNN Output Distribution')
-    axs[1, -1].set_xlabel('Class')
-    axs[1, -1].set_ylabel('Probability')
-
-    plt.tight_layout()
-    plt.savefig(f'./plot_results/feature_shift.png')
-    plt.show()
+        plt.tight_layout()
+        plt.show()
+        input()  # Wait for user input before continuing to next image
+        plt.close()
 
 # List of layer names to visualize
 layer_names = ['layer1', 'layer2', 'layer3', 'layer4']
-plot_feature_shift(img, label_name, bnn_features, det_features, layer_names)
+plot_feature_shift(imgs, labels, bnn_features, det_features, layer_names)

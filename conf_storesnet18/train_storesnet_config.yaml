@@ -3,7 +3,8 @@ model:
   ck_dir: "./checkpoints/storesnet18" 
   stochastic: 1
   n_component: 4
-
+  n_samples: 1
+  
 experiment:
   name: "train storesnet18"
   seed: 42
@@ -18,7 +19,6 @@ params:
   final_factor: 0.3
   weight_decay: 0.
   entropy_weight: 1.
-  n_sample: 1
   kl_min: 1e-2
   kl_max: 1
   prior_mean: 0.9

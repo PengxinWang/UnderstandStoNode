@@ -15,7 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 log = logging.getLogger(__name__)
 
 def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, input_weight_final,  
-               input_dir, log_dir, n_classes, in_channels, batch_size, lr, weight_decay, n_epochs, n_components):
+               input_dir, log_dir, n_classes, in_channels, batch_size, lr, weight_decay, n_epochs, n_components, n_samples):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     writer = SummaryWriter(log_dir=log_dir)
 
@@ -24,14 +24,14 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, inp
                                  batch_size=batch_size,
                                  train_unet_ratio=0.2)
     
-    bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=1).to(device)
+    bnn_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=1, n_samples=n_samples).to(device)
     det_model = StoResNet18(num_classes=n_classes, in_channels=in_channels, n_components=n_components, stochastic=2).to(device)
     
     model_dict = torch.load(bnn_ck_path)
     bnn_model.load_state_dict(model_dict)
     det_model.load_state_dict(model_dict)
-    sto_features = ModelFeatures(bnn_model, layers, n_components=n_components)
-    det_features = ModelFeatures(det_model, layers, n_components=n_components)
+    sto_features = ModelFeatures(bnn_model, layers, n_components=n_components, n_samples=n_samples)
+    det_features = ModelFeatures(det_model, layers, n_components=n_components, n_samples=1)
     sto_features.eval()
     det_features.eval()
 
@@ -104,6 +104,7 @@ def main(cfg: DictConfig):
     bnn_ck_dir = to_absolute_path(cfg.bnn.ck_dir)
     bnn_epoch = cfg.bnn.epoch
     n_components = cfg.bnn.n_components
+    n_samples = cfg.bnn.n_samples
 
     n_epochs = cfg.params.n_epochs
     batch_size = cfg.params.batch_size
@@ -122,6 +123,7 @@ def main(cfg: DictConfig):
     log.info(f'  -Input Directory: {input_dir}')  
     log.info(f'  -Number of Classes: {n_classes}')
     log.info(f'  -Number of Input Channels: {in_channels}')
+    log.info(f'  -Number of samples taken during inference: {n_samples}')
 
     log.info(f'Loss:')
     log.info(f'  -Layers: {intermediate_layers}')
@@ -143,7 +145,7 @@ def main(cfg: DictConfig):
     log.info(f'  -Weight Decay: {weight_decay}')
 
     train_unet(unet_ck_dir=unet_ck_dir, bnn_ck_path=bnn_ck_path, layers=intermediate_layers, beta=beta, input_weight_initial=input_weight_initial, input_weight_final=input_weight_final,
-               input_dir=input_dir, log_dir=logdir, n_components=n_components, n_classes=n_classes, in_channels=in_channels, 
+               input_dir=input_dir, log_dir=logdir, n_components=n_components, n_samples=n_samples, n_classes=n_classes, in_channels=in_channels, 
                batch_size=batch_size, lr=lr, weight_decay=weight_decay, n_epochs=n_epochs)
 
 if __name__ == '__main__':

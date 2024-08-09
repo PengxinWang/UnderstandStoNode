@@ -19,14 +19,14 @@ warnings.filterwarnings("ignore")
 log = logging.getLogger(__name__)
 
 def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_epoch, 
-          lr, batch_size, weight_decay, milestones, final_factor, aug_type, n_component, n_sample, entropy_weight, kl_min, kl_max, prior_mean, prior_std, post_mean_init, post_std_init):
+          lr, batch_size, weight_decay, milestones, final_factor, aug_type, n_component, n_samples, entropy_weight, kl_min, kl_max, prior_mean, prior_std, post_mean_init, post_std_init):
     """
     Trains the specified model on the given dataset and logs the training process.
     """
     writer = SummaryWriter(log_dir=log_dir)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_component, prior_mean=prior_mean, 
-                        prior_std=prior_std, post_mean_init=post_mean_init, post_std_init=post_std_init, n_sample=n_sample).to(device)
+                        prior_std=prior_std, post_mean_init=post_mean_init, post_std_init=post_std_init, n_samples=n_samples).to(device)
 
     trainloader, valloader = get_dataloader(data_dir=data_dir, dataset=dataset,
                                             batch_size=batch_size,
@@ -52,7 +52,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
                 imgs, labels = imgs.to(device), labels.to(device)
                 pred = model(imgs)
 
-                nll, kl = model.vi_loss(pred, labels, n_sample, entropy_weight=entropy_weight)
+                nll, kl = model.vi_loss(pred, labels, n_samples, entropy_weight=entropy_weight)
                 kl_weight = anneal_weight(epoch=epoch, initial_weight=kl_min, final_weight=kl_max, last_epoch=int(n_epoch*2/3)+1)
                 loss = nll + kl_weight*kl/size_trainset
                 epoch_loss += loss
@@ -73,7 +73,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
                     imgs, labels = imgs.to(device), labels.to(device)
                     pred = model(imgs)
 
-                    nll, kl = model.vi_loss(pred, labels, n_sample, entropy_weight=entropy_weight)
+                    nll, kl = model.vi_loss(pred, labels, n_samples, entropy_weight=entropy_weight)
                     kl_weight = anneal_weight(epoch=epoch, initial_weight=kl_min, final_weight=kl_max, last_epoch=int(n_epoch*2/3)+1)
                     loss = nll + kl_weight*kl/size_trainset
                     epoch_loss_val += loss
@@ -104,6 +104,7 @@ def main(cfg: DictConfig):
     model = cfg.model.name
     ck_dir = to_absolute_path(cfg.model.ck_dir)
     n_component = cfg.model.n_component
+    n_samples = cfg.model.n_samples
 
     dataset_name =cfg.dataset.name
     data_dir = to_absolute_path(cfg.dataset.dir)
@@ -118,7 +119,6 @@ def main(cfg: DictConfig):
     weight_decay = cfg.params.weight_decay
     aug_type = cfg.params.aug_type
     entropy_weight = cfg.params.entropy_weight
-    n_sample = cfg.params.n_sample
     kl_min = cfg.params.kl_min
     kl_max = cfg.params.kl_max
     prior_mean = cfg.params.prior_mean
@@ -139,6 +139,7 @@ def main(cfg: DictConfig):
     
     log.info(f'Model: {model}')
     log.info(f'  -ck_dir: {ck_dir}')
+    log.info(f'  -n_samples: {n_samples}')
 
     log.info(f'Training with')
     log.info(f'  -batch size: {batch_size}')
@@ -152,7 +153,6 @@ def main(cfg: DictConfig):
 
     log.info(f'  -entropy_weight: {entropy_weight}')
     log.info(f'  -n_component: {n_component}')
-    log.info(f'  -n_sample: {n_sample}')
     log.info(f'  -kl_min: {kl_min}, kl_max: {kl_max}')
     log.info(f'  -prior_mean: {prior_mean} prior_std: {prior_std}')    
     log.info(f'  -post_mean_init: {post_mean_init} post_std_init: {post_std_init}')  
@@ -173,7 +173,7 @@ def main(cfg: DictConfig):
             weight_decay=weight_decay,
             aug_type=aug_type,
             n_component=n_component,
-            n_sample=n_sample,
+            n_samples=n_samples,
             kl_min=kl_min,
             kl_max=kl_max,
             prior_mean=prior_mean,
