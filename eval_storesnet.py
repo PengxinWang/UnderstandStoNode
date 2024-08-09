@@ -97,15 +97,13 @@ def main(cfg: DictConfig):
     log.info(f'Dataset: {dataset_name}')
     log.info(f'  - Clean data directory: {datadir_clean}')
     log.info(f'  - Corrupted data directory: {datadir_corrupted}')
-    log.info(f'  - n_classes: {n_classes}')
-    log.info(f'  - in_channel: {in_channel}')
     log.info(f'  - corrupt_types: {corrupt_types}')
     
     log.info(f'Model: {model_name}')
     log.info(f'  - ck_dir: {ck_dir}')
     log.info(f'  - n_components: {n_components}')
-    log.info(f'  - stochastic: {stochastic}')
-    log.info(f'  - n_sample: {n_samples}')
+    log.info(f'  - stochastic mode: {stochastic}')
+    log.info(f'  - n_samples: {n_samples}')
 
     log.info(f'Testing with batch size: {test_bsize}, epochs: {n_epochs}, ece_bins: {ece_bins}')
     

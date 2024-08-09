@@ -77,7 +77,6 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, inp
 def main(cfg: DictConfig):
     experiment_name = cfg.experiment.name
     seed = cfg.experiment.seed
-    logdir = cfg.experiment.log_dir
 
     dataset_name = cfg.dataset.name
     input_dir = to_absolute_path(cfg.dataset.dir)
@@ -108,34 +107,12 @@ def main(cfg: DictConfig):
 
     log.info(f'Experiment: {experiment_name}')
     log.info(f'  -Seed: {seed}')
-    log.info(f'  -Logdir: {logdir}')
-
-    log.info(f'Dataset: {dataset_name}')    
-    log.info(f'  -Input Directory: {input_dir}')  
-    log.info(f'  -Number of Classes: {n_classes}')
-    log.info(f'  -Number of Input Channels: {in_channels}')
-    log.info(f'  -Number of samples taken during inference: {n_samples}')
-
-    log.info(f'Loss:')
-    log.info(f'  -Layers: {intermediate_layers}')
-    log.info(f'  -Beta: {betas}')
-    log.info(f'  -Input Weight: {input_weight_initial} to {input_weight_final}')
 
     log.info(f'Unet:')
     log.info(f'  -Unet Checkpoint Directory: {unet_ck_dir}') 
 
-    log.info(f'bnn: {bnn_model_name}')
-    log.info(f'  -Checkpoint Path: {bnn_ck_path}')
-    log.info(f'  -Epoch: {bnn_epoch}')
-    log.info(f'  -Number of Components: {n_components}')
-
-    log.info(f'Params:')
-    log.info(f'  -Number of Iterations: {n_epochs}')
-    log.info(f'  -Batch Size: {batch_size}')
-    log.info(f'  -Learning Rate: {lr}')
-    log.info(f'  -Weight Decay: {weight_decay}')
-
     for beta in betas:
+        log.info(f'training unet with beta: {beta}')
         train_unet(unet_ck_dir=unet_ck_dir, bnn_ck_path=bnn_ck_path, layers=intermediate_layers, beta=beta, input_weight_initial=input_weight_initial, input_weight_final=input_weight_final,
                input_dir=input_dir, n_components=n_components, n_samples=n_samples, n_classes=n_classes, in_channels=in_channels, 
                batch_size=batch_size, lr=lr, weight_decay=weight_decay, n_epochs=n_epochs)
