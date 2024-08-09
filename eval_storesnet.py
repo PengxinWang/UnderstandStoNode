@@ -64,7 +64,7 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types
     ece = ece_eval(pred_total, labels_total)
     return acc, ece, nll
 
-@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_config')
+@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_v2_config')
 def main(cfg: DictConfig):
     dataset_name = cfg.dataset.name
     datadir_clean = to_absolute_path(cfg.dataset.dir_clean)

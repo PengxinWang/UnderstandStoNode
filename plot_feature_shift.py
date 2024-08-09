@@ -12,7 +12,7 @@ data_dir = f'data/CIFAR10'
 dataloader = get_dataloader(data_dir=data_dir, dataset='CIFAR10', batch_size=16, train=False)
 imgs, labels = next(iter(dataloader))
 
-bnn_model = StoResNet18(stochastic=1, n_sample=4)
+bnn_model = StoResNet18(stochastic=1, n_samplesw=4)
 det_model = StoResNet18(stochastic=2)
 model_dict = torch.load(ck_path)
 bnn_model.load_state_dict(model_dict)

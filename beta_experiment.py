@@ -10,14 +10,11 @@ import hydra
 import logging
 from hydra.utils import to_absolute_path
 from omegaconf import DictConfig
-from torch.utils.tensorboard import SummaryWriter
 
 log = logging.getLogger(__name__)
-
 def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, input_weight_final,  
-               input_dir, log_dir, n_classes, in_channels, batch_size, lr, weight_decay, n_epochs, n_components, n_samples):
+               input_dir, n_classes, in_channels, batch_size, lr, weight_decay, n_epochs, n_components, n_samples):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    writer = SummaryWriter(log_dir=log_dir)
 
     trainloader = get_dataloader(data_dir=input_dir,
                                  train=True, val=False,
@@ -71,18 +68,12 @@ def train_unet(unet_ck_dir, bnn_ck_path, layers, beta, input_weight_initial, inp
 
                 pbar.set_postfix({'pred_loss': f'{epoch_pred_loss/(1+batch_id):.4f}', 'input_loss':f'{epoch_input_loss/(1+batch_id):.4f}', 'loss': f'{epoch_loss/(1+batch_id):.4f}'})
                 pbar.update()
-
-        if (epoch+1) % 20 == 0:
-            unet_ck_path = os.path.join(unet_ck_dir, f'unet_epoch{epoch+1}.pt')
-            torch.save(unet.state_dict(), unet_ck_path)
-            log.info(f'Saved checkpoint: {unet_ck_path}')
-
-    unet_ck_path_final = os.path.join(unet_ck_dir, f'unet_epoch{n_epochs}.pt')
-    torch.save(unet.state_dict(), unet_ck_path_final)
+                
+    unet_ck_path = os.path.join(unet_ck_dir, f'beta_{beta}.pt')
+    torch.save(unet.state_dict(), unet_ck_path)
     log.info('Training Done')
-    writer.close()
 
-@hydra.main(config_path='conf_unet', config_name='train_config')
+@hydra.main(config_path='conf_hyperparam', config_name='beta_config')
 def main(cfg: DictConfig):
     experiment_name = cfg.experiment.name
     seed = cfg.experiment.seed
@@ -98,7 +89,7 @@ def main(cfg: DictConfig):
     intermediate_layers = cfg.loss.intermediate_layers
     input_weight_initial = cfg.loss.input_weight_initial
     input_weight_final = cfg.loss.input_weight_final 
-    beta = cfg.loss.beta
+    betas = cfg.loss.betas
 
     bnn_model_name = cfg.bnn.name
     bnn_ck_dir = to_absolute_path(cfg.bnn.ck_dir)
@@ -127,7 +118,7 @@ def main(cfg: DictConfig):
 
     log.info(f'Loss:')
     log.info(f'  -Layers: {intermediate_layers}')
-    log.info(f'  -Beta: {beta}')
+    log.info(f'  -Beta: {betas}')
     log.info(f'  -Input Weight: {input_weight_initial} to {input_weight_final}')
 
     log.info(f'Unet:')
@@ -144,8 +135,9 @@ def main(cfg: DictConfig):
     log.info(f'  -Learning Rate: {lr}')
     log.info(f'  -Weight Decay: {weight_decay}')
 
-    train_unet(unet_ck_dir=unet_ck_dir, bnn_ck_path=bnn_ck_path, layers=intermediate_layers, beta=beta, input_weight_initial=input_weight_initial, input_weight_final=input_weight_final,
-               input_dir=input_dir, log_dir=logdir, n_components=n_components, n_samples=n_samples, n_classes=n_classes, in_channels=in_channels, 
+    for beta in betas:
+        train_unet(unet_ck_dir=unet_ck_dir, bnn_ck_path=bnn_ck_path, layers=intermediate_layers, beta=beta, input_weight_initial=input_weight_initial, input_weight_final=input_weight_final,
+               input_dir=input_dir, n_components=n_components, n_samples=n_samples, n_classes=n_classes, in_channels=in_channels, 
                batch_size=batch_size, lr=lr, weight_decay=weight_decay, n_epochs=n_epochs)
 
 if __name__ == '__main__':

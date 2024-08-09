@@ -1,0 +1,32 @@
+bnn:
+  name: "storesnet18"
+  ck_dir: "./checkpoints/storesnet18"
+  epoch: 300
+  n_components: 4
+  n_samples: 4
+
+unet:
+  ck_dir: "./checkpoints/beta"
+
+experiment:
+  name: "training beta with different beta"
+  seed: 42
+  log_dir: ".../logs"
+
+loss:
+  input_weight_initial: 0.25
+  input_weight_final: 0.1
+  intermediate_layers: [2, 4, 6, 8]
+  betas: [0.5, 0.8, 1.0, 1.2, 1.5]
+
+params:
+  n_epochs: 90
+  batch_size: 128
+  lr: 1e-2
+  weight_decay: 5e-4  
+
+dataset:
+  name: CIFAR10
+  dir: ./data/CIFAR10
+  in_channels: 3
+  n_classes: 10

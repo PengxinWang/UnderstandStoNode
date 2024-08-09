@@ -22,28 +22,25 @@ def process_data(results):
         intensities = sorted(set(d['intensity'] for d in model_data))
         acc_data = {intensity: [] for intensity in intensities}
         ece_data = {intensity: [] for intensity in intensities}
-        nll_data = {intensity: [] for intensity in intensities}
 
         for entry in model_data:
             intensity = entry['intensity']
             acc_data[intensity].append(entry['acc'])
             ece_data[intensity].append(entry['ece'])
-            nll_data[intensity].append(entry['nll'])  # Added NLL processing
 
         processed_data[model_name] = {
             'intensities': intensities,
             'accuracies': [sum(acc_data[i])/len(acc_data[i]) for i in intensities],
             'eces': [sum(ece_data[i])/len(ece_data[i]) for i in intensities],
-            'nlls': [sum(nll_data[i])/len(nll_data[i]) for i in intensities]  # Added NLL
         }
     return processed_data
 
 def plot_results(processed_data):
     markers = ['o', 's', '^', '*']
-    plt.figure(figsize=(18, 6))
+    plt.figure(figsize=(12, 6))
 
     # Plot Accuracy
-    plt.subplot(1, 3, 1)
+    plt.subplot(1, 2, 1)
     for idx, (model_name, data) in enumerate(processed_data.items()):
         marker = markers[idx]
         plt.plot(data['intensities'], data['accuracies'], marker=marker, label=model_name)
@@ -54,24 +51,13 @@ def plot_results(processed_data):
     plt.grid(True)
 
     # Plot ECE
-    plt.subplot(1, 3, 2)
+    plt.subplot(1, 2, 2)
     for idx, (model_name, data) in enumerate(processed_data.items()):
         marker = markers[idx]
         plt.plot(data['intensities'], data['eces'], marker=marker, label=model_name)
     plt.xlabel('Corruption Intensity')
     plt.ylabel('ECE')
     plt.title('ECE (down)')
-    plt.legend()
-    plt.grid(True)
-
-    # Plot NLL
-    plt.subplot(1, 3, 3)
-    for idx, (model_name, data) in enumerate(processed_data.items()):
-        marker = markers[idx]
-        plt.plot(data['intensities'], data['nlls'], marker=marker, label=model_name)
-    plt.xlabel('Corruption Intensity')
-    plt.ylabel('NLL')
-    plt.title('NLL (down)')
     plt.legend()
     plt.grid(True)
 
