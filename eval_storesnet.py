@@ -48,8 +48,8 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types
             imgs, labels = imgs.to(device), labels.to(device)
             pred = model(imgs)
             pred = pred.exp().mean(dim=1)
-        
-            nll = F.cross_entropy(pred, labels)
+
+            nll = F.cross_entropy(pred, labels, reduction='mean')
             nll_total += nll.item() * labels.size(0)
 
             _, pred_id = torch.max(pred, dim=-1)
@@ -65,7 +65,7 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types
     ece = ece_eval(pred_total, labels_total)
     return acc, ece, nll
 
-@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_v1_config')
+@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_v2_config')
 def main(cfg: DictConfig):
     dataset_name = cfg.dataset.name
     datadir_clean = to_absolute_path(cfg.dataset.dir_clean)
@@ -97,7 +97,6 @@ def main(cfg: DictConfig):
     log.info(f'Dataset: {dataset_name}')
     log.info(f'  - Clean data directory: {datadir_clean}')
     log.info(f'  - Corrupted data directory: {datadir_corrupted}')
-    log.info(f'  - corrupt_types: {corrupt_types}')
     
     log.info(f'Model: {model_name}')
     log.info(f'  - ck_dir: {ck_dir}')
@@ -176,7 +175,6 @@ def main(cfg: DictConfig):
         json.dump(results, f, indent=4)
         log.info(f'Results saved to {results_file}')
 
-        # Plot figures for evaluation
         # Plot figures for evaluation
         intensities = list(range(1, 6))    
         plt.figure(figsize=(15, 6))

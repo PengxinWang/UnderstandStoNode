@@ -46,10 +46,11 @@ def eval(model, dataset, data_dir, device, test_bsize=512, intensity=0, corrupt_
         for imgs, labels in testloader:
             imgs, labels = imgs.to(device), labels.to(device)
             pred = model(imgs)
-            nll = F.nll_loss(pred, labels) # the input of nll_loss should be log_probability
-            nll_total += nll.item() * labels.size(0)
-
             pred = pred.exp()
+
+            nll = F.cross_entropy(pred, labels) # the input of nll_loss should be log_probability
+            nll_total += nll.item() * labels.size(0)
+            
             _, pred_id = torch.max(pred, dim=-1)
             correct_count += (pred_id==labels).sum().item()
 
