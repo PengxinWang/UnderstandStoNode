@@ -3,16 +3,16 @@ import matplotlib.pyplot as plt
 from data import get_dataloader
 from model import *
 
-# CIFAR-10 class names
 CIFAR10_CLASSES = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
+plt.style.use('ggplot')
 
 # Load the data and models
-ck_path = f'checkpoints/storesnet18/storesnet18_epoch50.pt'
+ck_path = f'checkpoints/storesnet18/storesnet18_epoch300.pt'
 data_dir = f'data/CIFAR10'
 dataloader = get_dataloader(data_dir=data_dir, dataset='CIFAR10', batch_size=16, train=False)
 imgs, labels = next(iter(dataloader))
 
-bnn_model = StoResNet18(stochastic=1, n_samplesw=4)
+bnn_model = StoResNet18(stochastic=1, n_samples=4)
 det_model = StoResNet18(stochastic=2)
 model_dict = torch.load(ck_path)
 bnn_model.load_state_dict(model_dict)
@@ -38,11 +38,11 @@ register_hooks(det_model, det_features)
 
 # Pass the images through the models
 with torch.no_grad():
-    bnn_output = bnn_model(imgs).mean(dim=1)
+    bnn_output = bnn_model(imgs)
     det_output = det_model(imgs)
 
 # Convert output probabilities
-bnn_probabilities = torch.exp(bnn_output)
+bnn_probabilities = torch.exp(bnn_output).mean(dim=1)
 det_probabilities = torch.exp(det_output)
 
 # Plotting function
@@ -52,21 +52,26 @@ def plot_feature_shift(imgs, labels, bnn_features, det_features, layer_names):
         label = labels[i].item()
         label_name = CIFAR10_CLASSES[label]
         
-        fig, axs = plt.subplots(2, num_layers + 2, figsize=(14, 6))
+        fig, axs = plt.subplots(2, num_layers + 2, figsize=(20, 6))
         
         # Plot the input image
-        input_img = img.permute(1, 2, 0).cpu().numpy()  # Convert to HWC for plotting
+        input_img = img.permute(1, 2, 0).cpu().numpy() 
         axs[0, 0].imshow(input_img)
-        axs[0, 0].set_title(f'DET Input Image: {label_name}({label})')
+        axs[0, 0].set_title(f'DET Input Image:\n{label_name}({label})')
         axs[0, 0].axis('off')
         axs[1, 0].imshow(input_img)
-        axs[1, 0].set_title(f'STO Input Image: {label_name}({label})')
+        axs[1, 0].set_title(f'STO Input Image:\n{label_name}({label})')
         axs[1, 0].axis('off')
 
         for idx, layer_name in enumerate(layer_names):
             # Compute mean across feature map channels
-            fmap_bnn = bnn_features[layer_name][i]
-            fmap_det = det_features[layer_name][i]
+            fmap_bnn = bnn_features[layer_name]
+
+            fmap_det = det_features[layer_name]
+            fmap_bnn = fmap_bnn.view(fmap_det.shape[0], -1, *fmap_det.shape[1:])
+            fmap_bnn = fmap_bnn.mean(dim=1)
+            fmap_bnn = fmap_bnn[i]
+            fmap_det = fmap_det[i]
 
             fmap_bnn_mean = torch.mean(fmap_bnn, dim=0)
             fmap_det_mean = torch.mean(fmap_det, dim=0)
@@ -88,13 +93,17 @@ def plot_feature_shift(imgs, labels, bnn_features, det_features, layer_names):
 
         # Plot deterministic model output distribution
         axs[0, -1].bar(classes, det_probabilities_np)
-        axs[0, -1].set_title('Det Output Distribution')
+        axs[0, -1].set_title('Det Output')
+        axs[0, -1].set_xticks(range(10))  # Set x-ticks from 0 to 9
+        axs[0, -1].set_xticklabels([str(i) for i in range(10)])  # Set x-tick labels
         axs[0, -1].set_xlabel('Class')
         axs[0, -1].set_ylabel('Probability')
 
         # Plot stochastic model output distribution
         axs[1, -1].bar(classes, bnn_probabilities_np)
-        axs[1, -1].set_title('BNN Output Distribution')
+        axs[1, -1].set_title('BNN Output')
+        axs[1, -1].set_xticks(range(10))  # Set x-ticks from 0 to 9
+        axs[1, -1].set_xticklabels([str(i) for i in range(10)])  # Set x-tick labels
         axs[1, -1].set_xlabel('Class')
         axs[1, -1].set_ylabel('Probability')
 

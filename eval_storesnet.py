@@ -46,11 +46,12 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types
     with torch.no_grad():
         for imgs, labels in testloader:
             imgs, labels = imgs.to(device), labels.to(device)
-            pred = model(imgs).mean(dim=1)
-            nll = F.nll_loss(pred, labels) # the input of nll_loss should be log_probability
+            pred = model(imgs)
+            pred = pred.exp().mean(dim=1)
+        
+            nll = F.cross_entropy(pred, labels)
             nll_total += nll.item() * labels.size(0)
 
-            pred = pred.exp()
             _, pred_id = torch.max(pred, dim=-1)
             correct_count += (pred_id==labels).sum()
 
@@ -64,7 +65,7 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types
     ece = ece_eval(pred_total, labels_total)
     return acc, ece, nll
 
-@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_v2_config')
+@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_v1_config')
 def main(cfg: DictConfig):
     dataset_name = cfg.dataset.name
     datadir_clean = to_absolute_path(cfg.dataset.dir_clean)
