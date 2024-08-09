@@ -49,7 +49,7 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types
             pred = model(imgs)
             pred = pred.exp().mean(dim=1)
 
-            nll = F.cross_entropy(pred, labels, reduction='mean')
+            nll = F.nll_loss(torch.log(pred), labels)
             nll_total += nll.item() * labels.size(0)
 
             _, pred_id = torch.max(pred, dim=-1)

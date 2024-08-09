@@ -48,7 +48,7 @@ def eval(model, dataset, data_dir, device, test_bsize=512, intensity=0, corrupt_
             pred = model(imgs)
             pred = pred.exp()
 
-            nll = F.cross_entropy(pred, labels) # the input of nll_loss should be log_probability
+            nll = F.nll_loss(torch.log(pred), labels)
             nll_total += nll.item() * labels.size(0)
             
             _, pred_id = torch.max(pred, dim=-1)
@@ -64,7 +64,7 @@ def eval(model, dataset, data_dir, device, test_bsize=512, intensity=0, corrupt_
     ece = ece_eval(pred_total, labels_total) # the input of ece_eval should be probability
     return acc, ece, nll
 
-@hydra.main(config_path='conf_resnet18', config_name='eval_v1_config')
+@hydra.main(config_path='conf_resnet18', config_name='eval_v0_config')
 def main(cfg: DictConfig):
 
     dataset_name = cfg.dataset.name

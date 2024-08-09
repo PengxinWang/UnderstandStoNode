@@ -32,7 +32,9 @@ def get_dataloader(data_dir,
     elif aug_type == 'gaussian':
         train_transform = transforms.Compose([
                 transforms.ToTensor(),
-                # transforms.RandomApply([transforms.GaussianBlur(kernel_size=3)], p=0.1),
+                transforms.RandomHorizontalFlip(0.05),
+                transforms.RandomVerticalFlip(0.05),
+                transforms.RandomAffine(translate=(0.05, 0.05), scale=(0.95, 1.15), degrees=5, shear=5),
                 transforms.RandomApply([transforms.Lambda(lambda x: x + 0.05 * torch.randn_like(x))], p=0.1),
                 ])
     elif aug_type == 'full':

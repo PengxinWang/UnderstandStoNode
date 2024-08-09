@@ -104,8 +104,6 @@ def main(cfg: DictConfig):
 
     log.info(f'Dataset: {dataset_name}')
     log.info(f'clean_data directory: {datadir}') 
-    log.info(f'n_classes: {n_classes}')
-    log.info(f'in_channel: {in_channel}')
     
     log.info(f'Model: {model}')
     log.info(f'ck_dir: {ck_dir}')
