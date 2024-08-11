@@ -85,7 +85,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
         writer.add_scalars('Loss', {'train': epoch_loss/len(trainloader), 'val': epoch_loss_val/len(valloader)}, epoch)
         writer.add_scalars('nll', {'train': epoch_nll/len(trainloader), 'val': epoch_nll_val/len(valloader)}, epoch)
 
-        if (epoch+1) % 50 == 0:
+        if (epoch+1) % 100 == 0:
             ck_path = os.path.join(ck_dir, f'storesnet18_epoch{epoch+1}.pt')
             torch.save(model.state_dict(), ck_path)
             log.info(f'Saved checkpoint: {ck_path}')

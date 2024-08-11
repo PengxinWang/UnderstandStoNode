@@ -6,27 +6,31 @@ bnn:
   n_samples: 4
 
 unet:
-  ck_dir: "./checkpoints/unet"
+  ck_dir: "./checkpoints/layer"
 
 experiment:
-  name: "train unet with perceptual loss for more versatile noise generation"
+  name: "training unet with different intermediate layer groups"
   seed: 42
   log_dir: ".../logs"
 
 loss:
-  input_weight_initial: 0.25
+  input_weight_initial: 0.5
   input_weight_final: 0.1
-  intermediate_layers: [2, 4, 6, 8]
-  beta: 1.5
+  betas: [0.5, 1.0, 1.5]
 
 params:
   n_epochs: 100
   batch_size: 128
   lr: 1e-2
-  weight_decay: 5e-4  
+  weight_decay: 1e-5
 
 dataset:
   name: CIFAR10
   dir: ./data/CIFAR10
   in_channels: 3
   n_classes: 10
+
+layer_groups:
+  shallow_layer: [1, 2]
+  deep_layer: [3, 4]
+  mid_layers: [2, 3]

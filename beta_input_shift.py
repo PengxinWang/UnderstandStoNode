@@ -9,8 +9,7 @@ import warnings
 warnings.filterwarnings("ignore")
 
 # Define CIFAR-10 class names
-class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 
-               'dog', 'frog', 'horse', 'ship', 'truck']
+class_names = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 def generate_noise(img, unet_ck_path, in_channels):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -33,7 +32,7 @@ def main():
     in_channels = 3
     unet_ck_dir = './checkpoints/beta'
     beta_values = [0.5, 0.8, 1.0, 1.2, 1.5]  # Different beta values to evaluate
-    batch_size = 4  # Load 4 images to create a 2x2 grid
+    batch_size = 4  
 
     # Load a batch of images from the dataset
     dataloader = get_dataloader(data_dir=input_dir, train=True, val=False, batch_size=batch_size)
@@ -47,7 +46,6 @@ def main():
     for idx in range(batch_size):
         class_name = class_names[labels[idx].item()]
 
-        # Plot the original image in the first column
         axs[idx, 0].imshow(imgs_original[idx])
         if idx == 0:
             axs[idx, 0].set_title(f'Original: {class_name}')

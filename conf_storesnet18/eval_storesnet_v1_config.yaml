@@ -9,7 +9,7 @@ model:
 experiment:
   name: "test storesnet18 version 1: with sampling during inference"
   seed: 42
-  res_dir: "./results/storesnet18"
+  res_dir: "./results/"
 
 params:
   n_epochs: [300]

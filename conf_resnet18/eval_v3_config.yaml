@@ -1,10 +1,10 @@
 model:
   name: "resnet18"
-  ck_dir: "./checkpoints/resnet18_v1" 
-  version: 1
+  ck_dir: "./checkpoints/resnet18_v3" 
+  version: 3
 
 experiment:
-  name: "test resnet18 (version 1), with bnn augmented dataset"
+  name: "test resnet18 (version 3) on data augmentation + bnn augmentation"
   seed: 42
   res_dir: "./results"
 
@@ -12,7 +12,7 @@ params:
   n_epoch: [300]
   batch_size: 1024
   ece_bins: 20
-
+  
 dataset:
   name: CIFAR10
   dir_clean: ./data/CIFAR10

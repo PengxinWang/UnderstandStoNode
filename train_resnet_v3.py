@@ -77,7 +77,7 @@ def train(model, dataset, data_dir, n_classes, in_channel, ck_dir, n_epoch,
     torch.save(model.state_dict(), ck_path_final)
     log.info('Training Done')
 
-@hydra.main(config_path='conf_resnet18', config_name='train_v2_config')
+@hydra.main(config_path='conf_resnet18', config_name='train_v3_config')
 def main(cfg: DictConfig):
     experiment_name = cfg.experiment.name
     seed =cfg.experiment.seed

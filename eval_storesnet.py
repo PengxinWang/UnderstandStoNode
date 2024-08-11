@@ -17,7 +17,7 @@ warnings.filterwarnings("ignore")
 
 log = logging.getLogger(__name__)
 
-def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types=None, ece_bins=15):
+def stoeval(model, dataset, data_dir, device, test_bsize=512, intensity=0, corrupt_types=None, ece_bins=15):
     """
     Evaluates the performance of the given model on the provided test data.
 
@@ -26,9 +26,6 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types
         ece (float): Expected Calibration Error of the model on the test set.
         nll (float): Negative Log-Likelihood of the model on the test set.
     """
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-
     testloader = get_dataloader(data_dir=data_dir, dataset=dataset,
                                 batch_size=test_bsize,
                                 train=False,
@@ -36,8 +33,7 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types
                                 corrupt_types=corrupt_types)
     
     ece_eval = ECE(n_bins=ece_bins)
-    pred_total = []
-    labels_total = []
+    pred_total, labels_total = [], []
     correct_count = 0
     nll_total = 0.
     size_testset = len(testloader) * test_bsize
@@ -65,7 +61,7 @@ def stoeval(model, dataset, data_dir, test_bsize=512, intensity=0, corrupt_types
     ece = ece_eval(pred_total, labels_total)
     return acc, ece, nll
 
-@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_v2_config')
+@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_v1_config')
 def main(cfg: DictConfig):
     dataset_name = cfg.dataset.name
     datadir_clean = to_absolute_path(cfg.dataset.dir_clean)
@@ -75,7 +71,7 @@ def main(cfg: DictConfig):
     corrupt_types = cfg.dataset.corrupt_types
 
     experiment_name = cfg.experiment.name
-    res_dir = to_absolute_path(f'{cfg.experiment.res_dir}_v{cfg.model.version}')
+    res_dir = to_absolute_path(f'{cfg.experiment.res_dir}')
     seed = cfg.experiment.seed
 
     ck_dir = to_absolute_path(cfg.model.ck_dir)
@@ -109,32 +105,29 @@ def main(cfg: DictConfig):
     torch.manual_seed(seed)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    accuracies = {i: [] for i in range(6)}
-    eces = {i: [] for i in range(6)}
-    nlls = {i: [] for i in range(6)}
-
     results = {}
+    results_file = os.path.join(res_dir, 'evaluation_results.json')
+    if os.path.exists(results_file):
+        with open(results_file, 'r') as f:
+            results = json.load(f)
+
     for epoch in n_epochs:
-        model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_components, stochastic=stochastic, n_samples=n_samples).to(device)
+        model = StoResNet18(num_classes=n_classes, in_channels=in_channel, stochastic=stochastic, n_components=n_components, n_samples=n_samples).to(device)
         test_ck_path = os.path.join(ck_dir, f'storesnet18_epoch{epoch}.pt')
         model.load_state_dict(torch.load(test_ck_path))
         log.info(f'Evaluating model at epoch {epoch}')
 
         acc_clean, ece_clean, nll_clean = stoeval(model=model,
-                                    dataset=dataset_name,
-                                    data_dir=datadir_clean,
-                                    test_bsize=test_bsize,
-                                    ece_bins=ece_bins)
-        
-        accuracies[0].append(acc_clean)
-        eces[0].append(ece_clean)
-        nlls[0].append(nll_clean)
+                                               dataset=dataset_name,
+                                               data_dir=datadir_clean,
+                                               test_bsize=test_bsize,
+                                               device=device,
+                                               ece_bins=ece_bins)
+        intensity = 0
+        results[model_name] = {}
+        results[model_name][intensity] = []
 
-        if model_name not in results:
-            results[model_name] = []
-        results[model_name].append({
-            'epoch': epoch,
-            'intensity': 0,  
+        results[model_name][intensity].append({
             'acc': acc_clean,
             'ece': ece_clean,
             'nll': nll_clean
@@ -142,79 +135,25 @@ def main(cfg: DictConfig):
 
         for intensity in range(1, 6):
             acc_corrupted, ece_corrupted, nll_corrupted = stoeval(model=model,
-                                                dataset=f'{dataset_name}-C',
-                                                data_dir=datadir_corrupted,
-                                                test_bsize=test_bsize,
-                                                intensity=intensity,
-                                                ece_bins=ece_bins,
-                                                corrupt_types=corrupt_types)
-            
-            accuracies[intensity].append(acc_corrupted)
-            eces[intensity].append(ece_corrupted)
-            nlls[intensity].append(nll_corrupted)
-            results[model_name].append({
-                'epoch': epoch,
-                'intensity': intensity,
+                                                               dataset=f'{dataset_name}-C',
+                                                               data_dir=datadir_corrupted,
+                                                               test_bsize=test_bsize,
+                                                               intensity=intensity,
+                                                               corrupt_types=corrupt_types,
+                                                               device=device,
+                                                               ece_bins=ece_bins)
+
+            results[model_name][intensity] = []
+            results[model_name][intensity].append({
                 'acc': acc_corrupted,
                 'ece': ece_corrupted,
                 'nll': nll_corrupted
             })
 
-        log.info("Evaluation Results:")
-        log.info("+--------------------+----------+----------+----------+")
-        log.info("| Dataset            | Accuracy | ECE      | NLL      |")
-        log.info("+--------------------+----------+----------+----------+")
-        for intensity in range(6):
-            log.info(f"| Corrupted Intensity {intensity} | {accuracies[intensity][-1]:.4f} | {eces[intensity][-1]:.4f} | {nlls[intensity][-1]:.4f} |")
-        log.info("+--------------------+----------+----------+----------+")
-
-
     # Save results to a JSON file
-    results_file = os.path.join(res_dir, 'evaluation_results.json')
     with open(results_file, 'w') as f:
         json.dump(results, f, indent=4)
         log.info(f'Results saved to {results_file}')
-
-        # Plot figures for evaluation
-        intensities = list(range(1, 6))    
-        plt.figure(figsize=(15, 6))
-        
-        # Accuracy plot
-        plt.subplot(1, 3, 1)
-        for k, epoch in enumerate(n_epochs):
-            plt.plot(intensities, [accuracies[i][k] for i in intensities], marker='o', label=f'Epoch {epoch+1}')
-        plt.xlabel('Corruption Intensity')
-        plt.ylabel('Accuracy')
-        plt.title('Accuracy vs. Corruption Intensity')
-        plt.xticks(intensities)
-        plt.legend()
-        plt.grid(True)
-
-        # ECE plot
-        plt.subplot(1, 3, 2)
-        for k, epoch in enumerate(n_epochs):
-            plt.plot(intensities, [eces[i][k] for i in intensities], marker='o', label=f'Epoch {epoch+1}')
-        plt.xlabel('Corruption Intensity')
-        plt.ylabel('ECE')
-        plt.title('ECE vs. Corruption Intensity')
-        plt.xticks(intensities)
-        plt.legend()
-        plt.grid(True)
-
-        # NLL plot
-        plt.subplot(1, 3, 3)
-        for k, epoch in enumerate(n_epochs):
-            plt.plot(intensities, [nlls[i][k] for i in intensities], marker='o', label=f'Epoch {epoch+1}')
-        plt.xlabel('Corruption Intensity')
-        plt.ylabel('NLL')
-        plt.title('NLL vs. Corruption Intensity')
-        plt.xticks(intensities)
-        plt.legend()
-        plt.grid(True)
-
-        plt.suptitle('Evaluation Results Across Epochs')
-        plt.tight_layout(rect=[0, 0, 1, 0.95])
-        plt.savefig(os.path.join(res_dir, 'evaluation_results_all_epochs.png'))
 
 if __name__ == "__main__":    
     main()

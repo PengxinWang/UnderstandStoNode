@@ -1,0 +1,21 @@
+model:
+  name: "resnet18"
+  ck_dir: "./checkpoints/resnet18_v3" 
+
+experiment:
+  name: "train resnet18 (version 3) with gaussian data augmentation + bnnaug"
+  seed: 42
+  log_dir: ".../runs"
+
+params:
+  n_epoch: 300
+  batch_size: 128
+  lr: 1e-3
+  weight_decay: 1e-4
+  aug_type: "gaussian"
+
+dataset:
+  name: CIFAR10-bnnaug
+  dir: ./data/CIFAR10-aug
+  in_channel: 3
+  n_classes: 10

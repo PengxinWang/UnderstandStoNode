@@ -6,11 +6,11 @@ model:
 experiment:
   name: "benchmark"
   seed: 42
-  res_dir: "./results/resnet18_v0"
+  res_dir: "./results"
 
 params:
   n_epoch: [300]
-  batch_size: 512
+  batch_size: 1024
   ece_bins: 20
   
 dataset:
@@ -19,5 +19,7 @@ dataset:
   dir_corrupted: ./data/CIFAR10-C
   in_channel: 3
   n_classes: 10
-  corrupt_types: ['saturate', 'shot_noise', 'gaussian_noise', 'zoom_blur', 'glass_blur', 'brightness', 'contrast', 'motion_blur', 'pixelate', 'snow', 'speckle_noise', 'spatter', 'gaussian_blur', 'frost', 'defocus_blur',
+  # corrupt_types: ['saturate', 'shot_noise', 'gaussian_noise', 'zoom_blur', 'glass_blur', 'brightness', 'contrast', 'motion_blur', 'pixelate', 'snow', 'speckle_noise', 'spatter', 'gaussian_blur', 'frost', 'defocus_blur',
+  #                 'elastic_transform', 'impulse_noise', 'jpeg_compression', 'fog']
+  corrupt_types: ['saturate', 'shot_noise', 'zoom_blur', 'glass_blur', 'brightness', 'contrast', 'motion_blur', 'pixelate', 'snow', 'speckle_noise', 'spatter', 'frost', 'defocus_blur',
                   'elastic_transform', 'impulse_noise', 'jpeg_compression', 'fog']
