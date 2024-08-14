@@ -4,18 +4,13 @@ import json
 import torch
 import torch.nn.functional as F
 
-from data import get_dataloader
-
-import matplotlib.pyplot as plt
 import hydra
 import logging
 from hydra.utils import to_absolute_path
 from omegaconf import DictConfig
 
 from model import *
-from utils import ECE
-import warnings
-warnings.filterwarnings("ignore")
+from utils import ECE, get_dataloader
 
 log = logging.getLogger(__name__)
 
@@ -63,7 +58,7 @@ def eval(model, dataset, data_dir, device, test_bsize=512, intensity=0, corrupt_
     ece = ece_eval(pred_total, labels_total) # the input of ece_eval should be probability
     return acc, ece, nll
 
-@hydra.main(config_path='conf_resnet18', config_name='eval_v3_config')
+@hydra.main(config_path='configuration/conf_resnet18', config_name='eval_v0_config')
 def main(cfg: DictConfig):
 
     dataset_name = cfg.dataset.name
@@ -88,23 +83,17 @@ def main(cfg: DictConfig):
 
     log.info(f'Experiment: {experiment_name}')
     log.info(f'  -Seed: {seed}')
-    log.info(f'  -res_dir: {res_dir}')
 
     log.info(f'Dataset: {dataset_name}')
-    log.info(f'  - Clean data directory: {datadir_clean}')
-    log.info(f'  - Corrupted data directory: {datadir_corrupted}')
     
-    log.info(f'Model: {model_name}')
-    log.info(f'  - ck_dir: {cfg.model.ck_dir}')
-
-    log.info(f'Testing with batch size: {test_bsize}, epochs: {n_epochs}, ece_bins: {ece_bins}')
+    log.info(f'Model: {model_name} epochs: {n_epochs}')
     
     torch.manual_seed(seed)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
     results = {}
-    results_file = os.path.join(res_dir, 'data_aug_evaluation_results.json')
+    results_file = os.path.join(res_dir, 'evaluation_results.json')
     if os.path.exists(results_file):
         with open(results_file, 'r') as f:
             results = json.load(f)
@@ -147,7 +136,6 @@ def main(cfg: DictConfig):
                 'nll': nll_corrupted
             })
 
-    # Save results to a JSON file
     with open(results_file, 'w') as f:
         json.dump(results, f, indent=4)
         log.info(f'Results saved to {results_file}')

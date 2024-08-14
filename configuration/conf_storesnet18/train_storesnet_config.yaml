@@ -2,7 +2,7 @@ model:
   name: "storesnet18"
   ck_dir: "./checkpoints/storesnet18" 
   stochastic: 1
-  n_component: 4
+  n_component: 4  # Gaussian components of posteriori
   n_samples: 1
   
 experiment:
@@ -15,11 +15,11 @@ params:
   batch_size: 128
   lr: 1e-3
   aug_type: "geometric"
-  milestones: [0.5, 0.9]
-  final_factor: 0.3
+  milestones: [0.5, 0.9]  # milestones for learning rate scheduling
+  final_factor: 0.3  # final factor for learning rate scheduling
   weight_decay: 0.
-  entropy_weight: 1.
-  kl_min: 1e-2
+  entropy_weight: 1. # weight to regularize entropy of posteriori
+  kl_min: 1e-2 
   kl_max: 1
   prior_mean: 0.9
   prior_std: 0.64

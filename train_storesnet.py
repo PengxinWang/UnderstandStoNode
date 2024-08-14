@@ -4,7 +4,6 @@ import torch
 import torch.optim as optim
 
 from tqdm import tqdm
-from data import get_dataloader
 import hydra
 import logging
 from hydra.utils import to_absolute_path
@@ -12,17 +11,17 @@ from omegaconf import DictConfig
 from torch.utils.tensorboard import SummaryWriter
 
 from model import *
-from utils import anneal_weight, lr_schedule
-import warnings
-warnings.filterwarnings("ignore")
+from utils import anneal_weight, lr_schedule, get_dataloader
 
 log = logging.getLogger(__name__)
 
-def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n_epoch, 
-          lr, batch_size, weight_decay, milestones, final_factor, aug_type, n_component, n_samples, entropy_weight, kl_min, kl_max, prior_mean, prior_std, post_mean_init, post_std_init):
-    """
-    Trains the specified model on the given dataset and logs the training process.
-    """
+def stotrain(model, ck_dir, aug_type, n_component, n_samples, 
+             dataset, data_dir, n_classes, in_channel,  
+             log_dir, 
+             n_epoch, lr, batch_size, weight_decay, milestones, final_factor, 
+             entropy_weight, kl_min, kl_max, prior_mean, prior_std, post_mean_init, post_std_init,
+             ):
+    
     writer = SummaryWriter(log_dir=log_dir)
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model = StoResNet18(num_classes=n_classes, in_channels=in_channel, n_components=n_component, prior_mean=prior_mean, 
@@ -34,17 +33,12 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
                                             aug_type=aug_type)
 
     optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
-    # optimizer = optim.SGD(model.parameters(), lr=lr, momentum=0.0, weight_decay=weight_decay, nesterov=False)
     scheduler = optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda epoch: lr_schedule(epoch, n_epoch, milestones=milestones, final_factor=final_factor))
-
-    entropy_weight = entropy_weight
     size_trainset = len(trainloader) * batch_size
 
     for epoch in range(n_epoch):
-        epoch_loss = 0.
-        epoch_nll = 0.
-        epoch_loss_val = 0.
-        epoch_nll_val = 0.
+        epoch_loss, epoch_loss_val = 0., 0.
+        epoch_nll, epoch_nll_val = 0., 0.
 
         model.train()
         with tqdm(total=len(trainloader), desc=f'Training Epoch {epoch+1}/{n_epoch}') as pbar:
@@ -95,7 +89,7 @@ def stotrain(model, dataset, log_dir, data_dir, n_classes, in_channel, ck_dir, n
     log.info('Training Done')
     writer.close()
 
-@hydra.main(config_path='conf_storesnet18', config_name='train_storesnet_config')
+@hydra.main(config_path='configuration/conf_storesnet18', config_name='train_storesnet_config')
 def main(cfg: DictConfig):
     experiment_name = cfg.experiment.name
     log_dir = cfg.experiment.log_dir
@@ -106,7 +100,7 @@ def main(cfg: DictConfig):
     n_component = cfg.model.n_component
     n_samples = cfg.model.n_samples
 
-    dataset_name =cfg.dataset.name
+    dataset =cfg.dataset.name
     data_dir = to_absolute_path(cfg.dataset.dir)
     n_classes = cfg.dataset.n_classes
     in_channel = cfg.dataset.in_channel
@@ -127,18 +121,17 @@ def main(cfg: DictConfig):
     post_std_init = cfg.params.post_std_init
 
     os.makedirs(ck_dir, exist_ok=True)
+    torch.manual_seed(seed)
 
     log.info(f'Experiment: {experiment_name}')
     log.info(f'  -Seed: {seed}')
     log.info(f'  -log_dir: {log_dir}')
 
-    log.info(f'Dataset: {dataset_name}')
-    log.info(f'  -Data directory: {data_dir}') 
+    log.info(f'Dataset: {dataset}')
     log.info(f'  -n_classes: {n_classes}')
     log.info(f'  -in_channel: {in_channel}')
     
     log.info(f'Model: {model}')
-    log.info(f'  -ck_dir: {ck_dir}')
     log.info(f'  -n_samples: {n_samples}')
 
     log.info(f'Training with')
@@ -157,31 +150,12 @@ def main(cfg: DictConfig):
     log.info(f'  -prior_mean: {prior_mean} prior_std: {prior_std}')    
     log.info(f'  -post_mean_init: {post_mean_init} post_std_init: {post_std_init}')  
     
-    torch.manual_seed(seed)
-    stotrain(model=model,
-            dataset=dataset_name,
-            log_dir=log_dir,
-            data_dir=data_dir,
-            n_classes=n_classes,
-            in_channel=in_channel,
-            ck_dir=ck_dir,
-            n_epoch=n_epoch,
-            lr=lr,
-            milestones=milestones,
-            final_factor=final_factor,
-            batch_size=batch_size,
-            weight_decay=weight_decay,
-            aug_type=aug_type,
-            n_component=n_component,
-            n_samples=n_samples,
-            kl_min=kl_min,
-            kl_max=kl_max,
-            prior_mean=prior_mean,
-            prior_std=prior_std,
-            post_mean_init=post_mean_init,
-            post_std_init=post_std_init,
-            entropy_weight=entropy_weight
-            )
+    stotrain(model, ck_dir, aug_type, n_component, n_samples, 
+             dataset, data_dir, n_classes, in_channel,  
+             log_dir, 
+             n_epoch, lr, batch_size, weight_decay, milestones, final_factor, 
+             entropy_weight, kl_min, kl_max, prior_mean, prior_std, post_mean_init, post_std_init,
+             )
 
 if __name__ == "__main__":    
     main()

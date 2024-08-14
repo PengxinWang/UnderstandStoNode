@@ -4,9 +4,10 @@ import pandas as pd
 
 plt.style.use('ggplot')
 
-model_name_list = ['storesnet18_v1', 'resnet18_v1', 'resnet18_v2', 'resnet18_v3']
+# model_name_list = ['resnet18_v0', 'resnet18_v1', 'resnet18_v2', 'resnet18_v3']
+model_name_list = ['resnet18_v0', 'storesnet18_v1', 'resnet18_v1', 'resnet18_v2', 'resnet18_v3']
 dataset_name = 'CIFAR10'
-result_file = './results/data_aug_evaluation_results.json'
+result_file = './results/evaluation_results.json'
 # result_file = './results/evaluation_results.json'
 
 def load_results_from_json(result_file):

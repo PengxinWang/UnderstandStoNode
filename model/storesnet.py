@@ -125,7 +125,8 @@ class StoResNet(StoModel):
         post_std_init=(0.40, 0.02),
         mode='in',
         stochastic=1,
-        n_samples=1
+        n_samples=1,
+        freeze_post_learning=False
     ) -> None:
         super().__init__()
         if norm_layer is None:
@@ -173,7 +174,12 @@ class StoResNet(StoModel):
         if self.stochastic == 0:
             self.to_determinstic()
         else:
-            self.to_stochastic(stochastic_mode=self.stochastic)     
+            self.to_stochastic(stochastic_mode=self.stochastic)
+        if freeze_post_learning:
+            for name, param in self.named_parameters():
+                if 'post_mean' in name or 'post_std' in name:
+                    param.requires_grad = False
+             
 
     def _make_layer(self, block: Type[Union[StoBasicBlock]], planes: int, blocks: int,
                     stride: int = 1, dilate: bool = False) -> StoSequential:
@@ -227,5 +233,5 @@ class StoResNet(StoModel):
         x = x.view(-1, self.n_samples, x.size(1))
         return x
     
-def StoResNet18(num_classes=10, in_channels=3, n_components=4, stochastic=1, prior_mean=1.0, prior_std=0.32, post_mean_init=[1.0, 0.05], post_std_init=[0.40, 0.02], n_samples=1):
-    return StoResNet(StoBasicBlock, [2,2,2,2], num_classes=num_classes, in_channels=in_channels, n_components=n_components, stochastic=stochastic, prior_mean=prior_mean, prior_std=prior_std, post_mean_init=post_mean_init, post_std_init=post_std_init, n_samples=n_samples)
+def StoResNet18(num_classes=10, in_channels=3, n_components=4, stochastic=1, prior_mean=1.0, prior_std=0.32, post_mean_init=[1.0, 0.05], post_std_init=[0.40, 0.02], n_samples=1, freeze_post_learning=False):
+    return StoResNet(StoBasicBlock, [2,2,2,2], num_classes=num_classes, in_channels=in_channels, n_components=n_components, freeze_post_learning=freeze_post_learning, stochastic=stochastic, prior_mean=prior_mean, prior_std=prior_std, post_mean_init=post_mean_init, post_std_init=post_std_init, n_samples=n_samples)

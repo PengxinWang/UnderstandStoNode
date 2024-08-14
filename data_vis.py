@@ -17,7 +17,7 @@ transform = transforms.ToTensor()
 cifar10_testset = torchvision.datasets.CIFAR10(root=cifar10_data_dir, train=False, download=False, transform=transform)
 
 # Corruption types to visualize
-corruption_types = ['brightness', 'fog', 'frost', 'snow', 'spatter', 'motion_blur']
+corruption_types = ['motion_blur', 'zoom_blur', 'defocus_blur', 'fog']
 
 # Severity levels to visualize
 severity_levels = [1, 3, 5]

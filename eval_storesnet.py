@@ -2,18 +2,13 @@ import os
 import json
 import torch
 
-from data import get_dataloader
-
 import hydra
 import logging
 from hydra.utils import to_absolute_path
 from omegaconf import DictConfig
-import matplotlib.pyplot as plt
 
 from model import *
-from utils import ECE
-import warnings
-warnings.filterwarnings("ignore")
+from utils import ECE, get_dataloader
 
 log = logging.getLogger(__name__)
 
@@ -22,9 +17,9 @@ def stoeval(model, dataset, data_dir, device, test_bsize=512, intensity=0, corru
     Evaluates the performance of the given model on the provided test data.
 
     Returns:
-        acc (float): Accuracy of the model on the test set.
-        ece (float): Expected Calibration Error of the model on the test set.
-        nll (float): Negative Log-Likelihood of the model on the test set.
+        acc (float): Accuracy.
+        ece (float): Expected Calibration Error.
+        nll (float): Negative Log-Likelihood.
     """
     testloader = get_dataloader(data_dir=data_dir, dataset=dataset,
                                 batch_size=test_bsize,
@@ -46,7 +41,7 @@ def stoeval(model, dataset, data_dir, device, test_bsize=512, intensity=0, corru
             pred = pred.exp().mean(dim=1)
 
             nll = F.nll_loss(torch.log(pred), labels)
-            nll_total += nll.item() * labels.size(0)
+            nll_total += nll * labels.size(0)
 
             _, pred_id = torch.max(pred, dim=-1)
             correct_count += (pred_id==labels).sum()
@@ -59,9 +54,9 @@ def stoeval(model, dataset, data_dir, device, test_bsize=512, intensity=0, corru
     pred_total = torch.cat(pred_total, axis=0)
     labels_total = torch.cat(labels_total, axis=0)
     ece = ece_eval(pred_total, labels_total)
-    return acc, ece, nll
+    return acc, ece, nll.item()
 
-@hydra.main(config_path='conf_storesnet18', config_name='eval_storesnet_v1_config')
+@hydra.main(config_path='configuration/conf_storesnet18', config_name='eval_storesnet_config')
 def main(cfg: DictConfig):
     dataset_name = cfg.dataset.name
     datadir_clean = to_absolute_path(cfg.dataset.dir_clean)
@@ -91,11 +86,8 @@ def main(cfg: DictConfig):
     log.info(f'  -res_dir: {res_dir}')
 
     log.info(f'Dataset: {dataset_name}')
-    log.info(f'  - Clean data directory: {datadir_clean}')
-    log.info(f'  - Corrupted data directory: {datadir_corrupted}')
     
     log.info(f'Model: {model_name}')
-    log.info(f'  - ck_dir: {ck_dir}')
     log.info(f'  - n_components: {n_components}')
     log.info(f'  - stochastic mode: {stochastic}')
     log.info(f'  - n_samples: {n_samples}')
@@ -150,7 +142,6 @@ def main(cfg: DictConfig):
                 'nll': nll_corrupted
             })
 
-    # Save results to a JSON file
     with open(results_file, 'w') as f:
         json.dump(results, f, indent=4)
         log.info(f'Results saved to {results_file}')

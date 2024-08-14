@@ -2,11 +2,13 @@ import os
 import glob
 from PIL import Image
 import numpy as np
+
 import torch
-import torch.nn as nn
+import torchvision
 import torch.utils
-from torch.utils.data import Dataset
-import torch.utils.data
+import torch.nn as nn
+from torchvision import transforms
+from torch.utils.data import Dataset, DataLoader, random_split
 
 # Data
 def unnormalize(tensor):
@@ -17,7 +19,7 @@ class Augmented_Dataset(Dataset):
     """
     Create customed dataset for BNN augmented data
     """
-    def __init__(self, data_dir, p=0.5, transform=None):
+    def __init__(self, data_dir, p=0.865, transform=None):
         self.clean_imgs = np.load(os.path.join(data_dir, 'imgs.npy'))
         self.noisy_imgs = np.load(os.path.join(data_dir, 'noisy_imgs.npy'))
         self.labels = np.load(os.path.join(data_dir, 'labels.npy'))
@@ -141,6 +143,115 @@ class CorruptTinyImageNetDataset(torch.utils.data.Dataset):
             img = self.transform(img)
         return img, label
 
+def get_dataloader(data_dir,
+                   dataset='CIFAR10',
+                   batch_size=64,
+                   aug_type=None,
+                   train=True,
+                   val=False,
+                   val_ratio=0.1,
+                   train_unet_ratio=None,
+                   intensity=0,
+                   corrupt_types=None):
+    """
+    Creates dataloaders for the specified dataset.
+    dataset currently supported: CIFAR10, CIFAR100, TinyImageNet, CIFAR10-C, CIFAR100-C, TinyImageNet-C
+    """
+    base_transform = transforms.Compose([transforms.ToTensor()])
+        
+    if aug_type == 'geometric':
+        train_transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.RandomHorizontalFlip(0.05),
+                transforms.RandomVerticalFlip(0.05),
+                transforms.RandomAffine(translate=(0.05, 0.05), scale=(0.95, 1.15), degrees=5, shear=5),
+                transforms.RandomResizedCrop(size=(32, 32), scale=(0.9, 1.0)), 
+                ])      
+    elif aug_type == 'gaussian':
+        train_transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.RandomHorizontalFlip(0.05),
+                transforms.RandomVerticalFlip(0.05),
+                transforms.RandomAffine(translate=(0.05, 0.05), scale=(0.95, 1.15), degrees=5, shear=5),
+                transforms.RandomApply([transforms.Lambda(lambda x: x + 0.05 * torch.randn_like(x))], p=0.1),
+                transforms.RandomResizedCrop(size=(32, 32), scale=(0.9, 1.0)), 
+                ])
+    elif aug_type == 'full':
+        train_transform = transforms.Compose([
+                transforms.ToTensor(),
+                transforms.RandomHorizontalFlip(0.05),
+                transforms.RandomVerticalFlip(0.05),
+                transforms.RandomAffine(degrees=5, translate=(0.05, 0.05), scale=(0.95, 1.15), shear=5),
+                transforms.RandomApply([transforms.GaussianBlur(kernel_size=3)], p=0.1),
+                transforms.RandomApply([transforms.Lambda(lambda x: x + 0.05 * torch.randn_like(x))], p=0.1),
+                transforms.RandomResizedCrop(size=(32, 32), scale=(0.9, 1.0)), 
+                ])
+    else:
+        train_transform = base_transform
+
+    if dataset == 'CIFAR10':
+        if train_unet_ratio is None:
+            trainset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True, transform=train_transform)
+            testset = torchvision.datasets.CIFAR10(root=data_dir, train=False, download=True, transform=base_transform)
+        else:
+            dataset = torchvision.datasets.CIFAR10(root=data_dir, train=True, download=True, transform=train_transform)
+            train_size = int(len(dataset)*train_unet_ratio) 
+            trainset, _ = random_split(dataset, [train_size, len(dataset)-train_size]) 
+    
+    elif dataset == 'CIFAR100':
+        if train_unet_ratio is None:
+            trainset = torchvision.datasets.CIFAR100(root=data_dir, train=True, download=True, transform=train_transform)
+            testset = torchvision.datasets.CIFAR100(root=data_dir, train=False, download=True, transform=base_transform)
+        else:
+            dataset = torchvision.datasets.CIFAR100(root=data_dir, train=True, download=True, transform=train_transform)
+            train_size = int(len(dataset)*train_unet_ratio) 
+            trainset, _ = random_split(dataset, [train_size, len(dataset)-train_size]) 
+
+    elif dataset == 'TinyImageNet':
+        if train_unet_ratio is None:
+            trainset = TinyImageNetDataset(data_dir=data_dir, train=True, transform=train_transform)
+            testset = TinyImageNetDataset(data_dir=data_dir, train=False, transform=base_transform)
+        else:
+            dataset = TinyImageNetDataset(root=data_dir, train=True, transform=train_transform)
+            train_size = int(len(dataset)*train_unet_ratio) 
+            trainset, _ = random_split(dataset, [train_size, len(dataset)-train_size]) 
+
+    elif dataset == 'CIFAR10-C':
+        if intensity == 0:
+            raise ValueError(f'need to indicate intensity(from 1 to 5) for corrupted dataset')
+        testset = CorruptDataset(data_dir, corrupt_types=corrupt_types, intensity=intensity, transform=base_transform)
+    
+    elif dataset == 'CIFAR100-C':
+        if intensity == 0:
+            raise ValueError(f'need to indicate intensity(from 1 to 5) for corrupted dataset')
+        testset = CorruptDataset(data_dir, corrupt_types=corrupt_types, intensity=intensity, transform=base_transform)
+
+    elif dataset == 'TinyImageNet-C':
+        if intensity == 0:
+            raise ValueError(f'need to indicate intensity(from 1 to 5) for corrupted dataset')
+        testset = CorruptTinyImageNetDataset(data_dir, corrupt_types=corrupt_types, intensity=intensity, transform=base_transform)
+
+    elif dataset in ('CIFAR10-bnnaug', 'TinyImageNet-bnnaug'):
+        trainset = Augmented_Dataset(data_dir=data_dir, transform=train_transform)
+
+    else:
+        raise(ValueError(f'Dataset not supported'))
+            
+    if train:
+        if val:
+            val_size = int(len(trainset) * val_ratio)
+            train_size = len(trainset) - val_size
+            trainset, valset = random_split(trainset, [train_size, val_size])
+            trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4)
+            valloader = DataLoader(valset, batch_size=batch_size, shuffle=False, num_workers=4)
+            return trainloader, valloader
+        else:
+            trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4)
+            return trainloader
+    else:
+        testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4)
+        return testloader
+
 # Training
 def anneal_weight(epoch, initial_weight=1e-2, final_weight=1e-1, last_epoch=200, mode='linear'):
     """
@@ -207,7 +318,7 @@ class ECE(nn.Module):
     
     def forward(self, preds, labels):
         # preds.shape = [len(testset), n_classes], labels.shape[len(testset)], 
-        # note: preds need to be normalized
+        # note: preds need to be normalized to [0,1]
         confidences, preds = torch.max(preds, dim=1)
         correct_preds = preds.eq(labels)
 

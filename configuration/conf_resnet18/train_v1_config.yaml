@@ -3,7 +3,7 @@ model:
   ck_dir: "./checkpoints/resnet18_v1" 
 
 experiment:
-  name: "train resnet18 with bnn augmented dataset, version 2: unet with perceptual loss"
+  name: "train resnet18 with bnn augmented dataset, version 1: with data augmentation"
   seed: 42
   log_dir: ".../runs"
 

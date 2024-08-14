@@ -83,7 +83,7 @@ def main():
 
     # Directory containing the UNet checkpoints
     unet_ck_dir = '/u/48/wangp8/unix/Work/exp_cifar10/checkpoints/beta'
-    beta_list = [0.5, 0.8, 1.0, 1.5]
+    beta_list = [0.8, 1.0, 1.5]
 
     generate_noise(input_dir=input_dir, save_dir=save_dir, unet_ck_dir=unet_ck_dir, beta_list=beta_list, in_channels=in_channels, batch_size=batch_size)
 

@@ -1,0 +1,29 @@
+model:
+  name: "storesnet18"
+  ck_dir: "./checkpoints/storesnet18" 
+  n_components: 4
+  n_samples: 4
+  stochastic: 1 # setting stochastic=2 to test storesnet with sampling frozon during inference
+  version: 0
+
+experiment:
+  name: "test storesnet18: with sampling during inference"
+  seed: 42
+  res_dir: "./results/"
+
+params:
+  n_epochs: [300]
+  batch_size: 512
+  ece_bins: 20
+  
+dataset:
+  name: "CIFAR10"
+  dir_clean: ./data/CIFAR10
+  dir_corrupted: ./data/CIFAR10-C
+  in_channel: 3
+  n_classes: 10
+  corrupt_types: ['saturate', 'brightness', 'contrast',  
+                  'shot_noise', 'gaussian_noise', 'spatter', 'speckle_noise', 'impulse_noise',
+                  'zoom_blur', 'motion_blur', 'glass_blur', 'gaussian_blur', 'defocus_blur',
+                  'snow', 'frost', 'fog', 
+                  'pixelate', 'jpeg_compression', 'elastic_transform',]
