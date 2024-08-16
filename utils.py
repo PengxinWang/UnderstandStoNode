@@ -68,31 +68,42 @@ class CorruptDataset(torch.utils.data.Dataset):
 class TinyImageNetDataset(torch.utils.data.Dataset):
     """
     create customed dataset for TinyImageNet dataset
+    n_classes = 200
+    --data_dir
+      --train
+        --nid/images/nid_index.JPEG
+      --val
+        --images/val_index.JPEG
+        --val_annotations.txt: val_index.JPEG <--> nid
+      --test
+        --images/test_index.JPEG (no label)
+      --wnids.txt: nids occured in TinyImageNet
+      --words.txt: nid <--> readable label
     """
     def __init__(self, data_dir, transform=None, train=True):
-        self.id_dict = {}
-        with open(os.path.join(data_dir, 'wnids.txt'), 'r') as f:
-            for i, line in enumerate(f):
-                self.id_dict[line.strip()] = i
-
+        self.wnid_to_id = {}
         self.train = train
         self.transform = transform
+        with open(os.path.join(data_dir, 'wnids.txt'), 'r') as f:
+            for i, line in enumerate(f):
+                nid = line.strip()
+                self.wnid_to_id[nid] = i
+
         if train:
             self.filenames = glob.glob(os.path.join(data_dir, 'train/*/images/*.JPEG'))
-            self.labels = [self.id_dict[os.path.basename(os.path.dirname(os.path.dirname(fp)))] 
+            self.labels = [self.wnid_to_id[os.path.basename(os.path.dirname(os.path.dirname(fp)))] 
                            for fp in self.filenames]
         else:
             val_images_dir = os.path.join(data_dir, 'val/images')
-            self.filenames = glob.glob(os.path.join(data_dir, '/val/images/*.JPEG'))
+            self.filenames = []
             self.labels = []
             val_annotations_file = os.path.join(data_dir, 'val/val_annotations.txt')
             with open(val_annotations_file, 'r') as f:
                 for line in f.readlines():
                     parts = line.strip().split('\t')
                     img_name, wnid = parts[0], parts[1]
-                    if os.path.join(val_images_dir, img_name) in self.filenames:
-                        self.labels.append(self.id_dict[wnid])
-        
+                    self.filenames.append(os.path.join(val_images_dir, img_name))
+                    self.labels.append(self.wnid_to_id[wnid])
     def __len__(self):
         return len(self.filenames)
         
@@ -102,10 +113,26 @@ class TinyImageNetDataset(torch.utils.data.Dataset):
         if self.transform:
             img = self.transform(img)
         return img, label
+    
+    @staticmethod
+    def get_id_to_name_mapping(data_dir):
+        wnid_to_id = {}
+        id_to_name = {}
+        with open(os.path.join(data_dir, 'wnids.txt'), 'r') as f:
+            for i, line in enumerate(f):
+                nid = line.strip()
+                wnid_to_id[nid] = i
+        with open(os.path.join(data_dir, 'words.txt'), 'r') as f:
+            for line in f:
+                nid, name = line.strip().split('\t')
+                if nid in wnid_to_id:
+                    id = wnid_to_id[nid]
+                    id_to_name[id] = name
+        return id_to_name
 
 class CorruptTinyImageNetDataset(torch.utils.data.Dataset):
     """
-    create customed dataset for corrupted TinyImageNet dataset
+    create customed dataset for corrupted TinyImageNet dataset.
     """
     def __init__(self, data_dir, corrupt_types, intensity, transform=None):
         self.data_dir = data_dir
@@ -157,7 +184,10 @@ def get_dataloader(data_dir,
     Creates dataloaders for the specified dataset.
     dataset currently supported: CIFAR10, CIFAR100, TinyImageNet, CIFAR10-C, CIFAR100-C, TinyImageNet-C
     """
-    base_transform = transforms.Compose([transforms.ToTensor()])
+    base_transform = transforms.Compose([transforms.Resize((224, 224)),
+                                         transforms.ToTensor(),
+                                         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+                                         ])
         
     if aug_type == 'geometric':
         train_transform = transforms.Compose([
@@ -209,12 +239,15 @@ def get_dataloader(data_dir,
 
     elif dataset == 'TinyImageNet':
         if train_unet_ratio is None:
-            trainset = TinyImageNetDataset(data_dir=data_dir, train=True, transform=train_transform)
-            testset = TinyImageNetDataset(data_dir=data_dir, train=False, transform=base_transform)
+            trainset = TinyImageNetDataset(data_dir=data_dir, transform=train_transform)
+            testset = TinyImageNetDataset(data_dir=data_dir,  transform=base_transform, train=False)
         else:
             dataset = TinyImageNetDataset(root=data_dir, train=True, transform=train_transform)
             train_size = int(len(dataset)*train_unet_ratio) 
             trainset, _ = random_split(dataset, [train_size, len(dataset)-train_size]) 
+    
+    elif dataset == 'ImageNet-1k':
+        raise NotImplementedError()
 
     elif dataset == 'CIFAR10-C':
         if intensity == 0:
@@ -249,7 +282,7 @@ def get_dataloader(data_dir,
             trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4)
             return trainloader
     else:
-        testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4)
+        testloader = DataLoader(testset, batch_size=batch_size, shuffle=False, num_workers=0)
         return testloader
 
 # Training
