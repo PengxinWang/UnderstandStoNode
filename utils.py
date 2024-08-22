@@ -184,10 +184,13 @@ def get_dataloader(data_dir,
     Creates dataloaders for the specified dataset.
     dataset currently supported: CIFAR10, CIFAR100, TinyImageNet, CIFAR10-C, CIFAR100-C, TinyImageNet-C
     """
-    base_transform = transforms.Compose([transforms.Resize((224, 224)),
+    if 'ImageNet' in dataset:
+        base_transform = transforms.Compose([transforms.Resize((224, 224)),
                                          transforms.ToTensor(),
                                          transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
                                          ])
+    else:
+        base_transform = transforms.Compose([transforms.ToTensor(),])
         
     if aug_type == 'geometric':
         train_transform = transforms.Compose([

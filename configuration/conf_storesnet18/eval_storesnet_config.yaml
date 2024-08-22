@@ -4,16 +4,17 @@ model:
   n_components: 4
   n_samples: 4
   stochastic: 1 # setting stochastic=2 to test storesnet with sampling frozon during inference
-  version: 0
+  version: 2
+  mode: 'kernel'
 
 experiment:
-  name: "test storesnet18: with sampling during inference"
+  name: "test storesnet18: with sampling during inference and kernel noise operator"
   seed: 42
   res_dir: "./results/"
 
 params:
   n_epochs: [300]
-  batch_size: 512
+  batch_size: 16
   ece_bins: 20
   
 dataset:

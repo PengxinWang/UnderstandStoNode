@@ -4,6 +4,7 @@ model:
   stochastic: 1
   n_component: 4  # Gaussian components of posteriori
   n_samples: 1
+  mode: 'kernel'
   
 experiment:
   name: "train storesnet18"

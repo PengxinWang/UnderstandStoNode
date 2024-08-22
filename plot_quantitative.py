@@ -1,4 +1,5 @@
 import json
+import os
 import matplotlib.pyplot as plt
 import pandas as pd
 
@@ -99,6 +100,8 @@ def generate_results_table(processed_data, output_file='./plot_results/evaluatio
     full_table = pd.concat(tables)
     full_table.to_csv(output_file, index=False)
     print(f"Results table saved to {output_file}")
+
+os.makedirs(f'./plot_results', exist_ok=True)
 
 # Load and process results
 results = load_results_from_json(result_file)

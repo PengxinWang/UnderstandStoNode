@@ -10,7 +10,7 @@ class StoLayer(nn.Module):
                  prior_std=0.40, 
                  post_mean_init=(1.0, 0.05), 
                  post_std_init=(0.40, 0.02),
-                 mode='inout'):
+                 mode='inout',):
         self.prior_mean=nn.Parameter(torch.tensor(prior_mean), requires_grad=False)
         self.prior_std=nn.Parameter(torch.tensor(prior_std), requires_grad=False)
 
@@ -25,13 +25,17 @@ class StoLayer(nn.Module):
         self.post_mean_init = post_mean_init
         self.post_std_init = post_std_init
 
-        # latent_shape=[feature_size, 1, 1]
-        # self.weight=[out_planes, in_planes, kernel_height, kernel_width] for Conv2d
+        # self.weight=[out_planes, in_planes, kernel_height, kernel_width] for Conv2d, [out_features, in_features]
         latent_shape = [1] * (self.weight.ndim-1)
         if mode == 'in':
             latent_shape[0] = self.weight.shape[1]
         elif mode == 'inout':
             latent_shape[0] = sum(self.weight.shape[:2])
+        elif mode == 'kernel':
+            if isinstance(self, nn.Conv2d):
+                latent_shape = self.weight.shape[1:4]
+            else:
+                raise Exception(f'kernel mode only works for conv layer')
         else:
             raise(NotImplementedError)    
 
@@ -39,11 +43,10 @@ class StoLayer(nn.Module):
         self.post_mean = nn.Parameter(torch.ones(n_components, *latent_shape), requires_grad=True)
         self.post_std = nn.Parameter(torch.ones(n_components, *latent_shape), requires_grad=True)
 
-        # use a hierarchical Gaussian, that is, self.post_mean & self.post_std follows gaussian
         nn.init.normal_(self.post_mean, post_mean_init[0], post_mean_init[1])
         nn.init.normal_(self.post_std, post_std_init[0], post_std_init[1])
 
-    def get_mul_noise(self, input, indices, stochastic_mode=1):
+    def get_noise(self, input, indices, stochastic_mode=1):
         """
         sample noise multiplied to feature
         stochastic_mode: 1 for random noise and 2 for fixed noise
@@ -60,6 +63,21 @@ class StoLayer(nn.Module):
             raise ValueError(f'stochastic mode {stochastic_mode} not supported')
         # mean.shape[0] will be automatically extended to the same size of indices
         return noise
+    
+    def apply_noise_conv(self, input, noise):
+        """
+        input.shape = [batch_size, in_channel, height, width]
+        noise.shape = [batch_size, in_channel, kernel_height, kernel_width] (mode == kernel)
+        """
+        batch_size, in_channel = input.shape[:2]
+        convolved_outputs = []
+    
+        for i in range(batch_size):
+            single_input = input[i:i+1]  # Shape: [1, in_channels, height, width]
+            single_filter = noise[i:i+1].permute(1, 0, 2, 3)  # Shape: [1, in_channels, kernel_height, kernel_width]
+            convolved_output = F.conv2d(single_input, single_filter, padding='same', groups=in_channel)
+            convolved_outputs.append(convolved_output)
+        return torch.cat(convolved_outputs, dim=0)
     
     def _entropy_lower_bound(self, mean, std):
         """
@@ -152,7 +170,7 @@ class StoLinear(nn.Linear, StoLayer):
         if self.stochastic == 0:
             x = super().forward(x)
         else:
-            noise = self.get_mul_noise(x, indices, stochastic_mode=self.stochastic)
+            noise = self.get_noise(x, indices, stochastic_mode=self.stochastic)
             # noise.shape = [batch_size, in_features+out_features]
             if 'in' in self.mode:
                 x = x * noise[:, :x.shape[1]]
@@ -180,7 +198,7 @@ class StoConv2d(nn.Conv2d, StoLayer):
                  prior_std=0.40,
                  post_mean_init=(1.0, 0.05),
                  post_std_init=(0.40, 0.02),
-                 mode='inout',
+                 mode='kernel',
                  ):
         super().__init__(in_channels, out_channels, kernel_size, stride, padding, dilation, groups, bias, padding_mode)
         self.sto_init(n_components, prior_mean, prior_std, post_mean_init, post_std_init, mode)
@@ -192,10 +210,12 @@ class StoConv2d(nn.Conv2d, StoLayer):
         if self.stochastic == 0:
             x = super().forward(x)
         else:
-            noise = self.get_mul_noise(x, indices, stochastic_mode=self.stochastic)
-            # noise.shape = [batch_size, in_features+out_features]
+            noise = self.get_noise(x, indices, stochastic_mode=self.stochastic)
+            # noise.shape = [batch_size, in_features + out_features]
             if 'in' in self.mode:
                 x = x * noise[:, :x.shape[1]]
+            if self.mode == 'kernel':
+                x = self.apply_noise_conv(input=x, noise=noise)
             x = super().forward(x)
             if 'out' in self.mode:
                 x = x * noise[:, -x.shape[1]:]
